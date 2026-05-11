@@ -6,6 +6,14 @@ Solutions live in year/day files, such as `2024/02.rb`. The local runner is only
 
 ## Setup
 
+Requires Ruby 4.0+. The checked-in `.ruby-version` pins the local development version; patch updates such as Ruby 4.0.3 are supported by the project requirement.
+
+Install development dependencies:
+
+```sh
+bundle install
+```
+
 Configure your session cookie and User-Agent:
 
 ```sh

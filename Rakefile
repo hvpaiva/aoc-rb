@@ -35,13 +35,13 @@ task :all, [:year] do |_task, args|
 end
 
 task :check do
-  files = ["aoc.rb", "Rakefile", *Dir[File.join("[0-9][0-9][0-9][0-9]", "[0-9][0-9].rb")].sort]
+  files = ["Gemfile", "Rakefile", *Dir["*.rb"].sort, *Dir[File.join("[0-9][0-9][0-9][0-9]", "[0-9][0-9].rb")].sort]
 
   files.each do |path|
     run_command "ruby", "-c", path
   end
 
-  run_command "standardrb", *files
+  run_command "bundle", "exec", "standardrb", *files
 end
 
 (2015..Date.today.year).each do |year|
