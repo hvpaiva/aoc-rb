@@ -30,17 +30,15 @@ export AOC_SESSION='YOUR_SESSION_COOKIE'
 export AOC_USER_AGENT='github.com/your-user/your-repo by your-email@example.com'
 ```
 
+Inputs are cached under `inputs/`. Cached inputs are reused locally and do not trigger HTTP requests. New downloads are throttled to one request every 300 seconds by default; override with `AOC_MIN_INTERVAL_SECONDS` when needed.
+
 ## Create a day
-
-```sh
-ruby aoc.rb new 2024 2
-```
-
-Or:
 
 ```sh
 rake 'new[2024,2]'
 ```
+
+Scaffolding supports 25 days for years through 2024 and 12 days for 2025 onward.
 
 ## Run a day
 

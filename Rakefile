@@ -2,6 +2,8 @@
 
 require "date"
 
+require_relative "aoc"
+
 task default: :help
 
 task :help do
@@ -46,7 +48,7 @@ end
 
 (2015..Date.today.year).each do |year|
   namespace year.to_s.to_sym do
-    (1..25).each do |day|
+    (1..AOC::Calendar.max_day_for(year)).each do |day|
       task format("%02d", day).to_sym do
         path = day_path(year, day)
 

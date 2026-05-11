@@ -294,7 +294,16 @@ module AOC
       raise "Could not infer year/day from #{path.inspect}. Use a structure like 2024/02.rb."
     end
 
-    [match[1].to_i, match[2].to_i]
+    year = match[1].to_i
+    day = match[2].to_i
+
+    validate_year_day!(year, day)
+
+    [year, day]
+  end
+
+  def day_file?(path)
+    Pathname(path).to_s.tr("\\", "/").match?(%r{(?:^|/)(20\d{2})/(?:day_?)?\d{1,2}\.rb\z})
   end
 
   def input_for(year, day)
@@ -347,7 +356,7 @@ module AOC
   end
 
   def throttle!
-    min_interval = Integer(ENV.fetch("AOC_MIN_INTERVAL_SECONDS", "3"))
+    min_interval = Integer(ENV.fetch("AOC_MIN_INTERVAL_SECONDS", "300"))
     return if min_interval <= 0
 
     FileUtils.mkdir_p(CACHE)
@@ -419,22 +428,40 @@ module AOC
     year = Integer(year)
     day = Integer(day)
 
-    raise "Year must be 2015 or later." if year < 2015
-    raise "Day must be between 1 and 25." unless (1..25).cover?(day)
+    validate_year_day!(year, day)
 
     [year, day]
   rescue ArgumentError
     raise "Year and day must be integers."
   end
 
+  def validate_year_day!(year, day)
+    raise "Year must be 2015 or later." if year < 2015
+
+    max_day = max_day_for(year)
+    raise "Day must be between 1 and #{max_day} for #{year}." unless (1..max_day).cover?(day)
+  end
+
+  def max_day_for(year)
+    Calendar.max_day_for(year)
+  end
+
   def present?(value)
     value && !value.empty?
+  end
+
+  module Calendar
+    module_function
+
+    def max_day_for(year)
+      (year >= 2025) ? 12 : 25
+    end
   end
 end
 
 if File.expand_path($PROGRAM_NAME) == File.expand_path(__FILE__)
   AOC.cli!(ARGV)
-else
+elsif AOC.day_file?($PROGRAM_NAME)
   at_exit do
     AOC.run! unless $!
   end
