@@ -2,25 +2,7 @@ require_relative "../aoc"
 
 MOVES = {">" => 1, "^" => 1i, "<" => -1, "v" => -1i}.freeze
 
-example <<~INPUT, part1: 2
-  >
-INPUT
-
-example <<~INPUT, part1: 4, part2: 3
-  ^>v<
-INPUT
-
-example <<~INPUT, part1: 2, part2: 11
-  ^v^v^v^v^v
-INPUT
-
-example <<~INPUT, part2: 3
-  ^v
-INPUT
-
-def moves
-  @moves ||= input.chomp.chars.map { MOVES.fetch(it) }
-end
+def moves = @moves ||= input.chomp.chars.map { MOVES.fetch(it) }
 
 def trail(moves)
   position = 0i
@@ -36,3 +18,8 @@ def part2
     .with_index { |_, i| i.even? }
     .map { trail(it) }.reduce(:|).size
 end
+
+example ">", part1: 2
+example "^>v<", part1: 4, part2: 3
+example "^v^v^v^v^v", part1: 2, part2: 11
+example "^v", part2: 3

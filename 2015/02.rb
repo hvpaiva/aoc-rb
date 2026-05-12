@@ -5,9 +5,7 @@ example <<~INPUT, part1: 101, part2: 48
   1x1x10
 INPUT
 
-def presents
-  @presents ||= input.lines(chomp: true).map { |line| line.split("x").map(&:to_i) }
-end
+def presents = @presents ||= input.lines(chomp: true).map { |line| line.split("x").map(&:to_i) }
 
 def part1
   presents.sum do |l, w, h|

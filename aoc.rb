@@ -434,16 +434,14 @@ module AOC
     path.write(<<~RUBY)
       require_relative "../aoc"
 
-      # example <<~INPUT, part1: 0
-      # INPUT
-
-      def parsed
-        @parsed ||= input.lines(chomp: true)
-      end
+      def parsed = @parsed ||= input.lines(chomp: true)
 
       def part1
         raise "part1 not implemented"
       end
+
+      # example <<~INPUT, part1: 0
+      # INPUT
     RUBY
 
     puts "Created: #{display_path}"

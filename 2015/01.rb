@@ -1,26 +1,10 @@
 require_relative "../aoc"
 
-example <<~INPUT, part1: 0
-  (())()()
-INPUT
-
-example <<~INPUT, part1: 6
-  ((((()(()(
-INPUT
-
-example <<~INPUT, part1: 3, part2: 1
-  ))(((((
-INPUT
-
-example <<~INPUT, part1: -6, part2: 1
-  ))))())())
-INPUT
+STEPS = {"(" => 1, ")" => -1}.freeze
 
 def part1
   input.count("(") - input.count(")")
 end
-
-STEPS = {"(" => 1, ")" => -1}.freeze
 
 def part2
   floor = 0
@@ -29,3 +13,8 @@ def part2
     return i if floor.negative?
   end
 end
+
+example "(())()()", part1: 0
+example "((((()(()(", part1: 6
+example "))(((((", part1: 3, part2: 1
+example "))))())())", part1: -6, part2: 1
