@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require_relative "../aoc"
 
 example <<~INPUT, part1: 101, part2: 48

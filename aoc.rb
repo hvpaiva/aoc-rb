@@ -384,8 +384,6 @@ module AOC
     FileUtils.mkdir_p(path.dirname)
 
     path.write(<<~RUBY)
-      # frozen_string_literal: true
-
       require_relative "../aoc"
 
       # example <<~INPUT, part1: 0
