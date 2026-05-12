@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "json"
 require "net/http"
 
 module AOC
@@ -48,7 +49,11 @@ module AOC
     module_function
 
     def title(year, day)
-      puts "#{icon(:tree)} #{bold("Advent of Code")} #{year} day #{format("%02d", day)}"
+      puts "#{icon(:tree)} #{bold("Ruby Advent of Code")} #{year} day #{format("%02d", day)}"
+    end
+
+    def year_title(year)
+      puts "#{icon(:tree)} #{bold("Ruby Advent of Code")} #{year}"
     end
 
     def examples_header
@@ -61,32 +66,38 @@ module AOC
       puts cyan("Real input")
     end
 
-    def example_ok(label, part, actual, elapsed)
-      puts "  #{green(icon(:ok))} #{label} · part #{part}  expected = got = #{value(actual)}  (#{ms(elapsed)})"
+    def example_ok(label, part, actual)
+      puts "  #{green(icon(:ok))} #{example_title(label, part)}  #{dim("expected = got = #{value(actual)}")}"
     end
 
-    def example_fail(label, part, expected, actual, elapsed)
-      puts "  #{red(icon(:fail))} #{label} · part #{part}  (#{ms(elapsed)})"
+    def example_fail(label, part, expected, actual)
+      puts "  #{red(icon(:fail))} #{example_title(label, part)}"
       puts "     expected: #{value(expected)}"
       puts "          got: #{value(actual)}"
       puts
       puts red("Stopped before real input.")
     end
 
-    def example_exception(label, part, exception, elapsed)
-      puts "  #{red(icon(:boom))} #{label} · part #{part} raised #{exception.class}  (#{ms(elapsed)})"
+    def example_exception(label, part, exception)
+      puts "  #{red(icon(:boom))} #{example_title(label, part)} raised #{exception.class}"
       puts "     #{exception.message}"
       print_backtrace(exception)
       puts
       puts red("Stopped before real input.")
     end
 
-    def real_part(part, answer, elapsed)
-      puts "  #{yellow(icon(:star))} part #{part} answer: #{value(answer)}  (#{ms(elapsed)})"
+    def example_skip(label, part)
+      puts "  #{yellow(icon(:skip))} #{example_title(label, part)}  #{dim("skipped (def part#{part} not defined)")}"
+    end
+
+    def real_part(part, answer, elapsed, answer_width)
+      answer = value(answer)
+
+      puts "  #{yellow(icon(:star))} #{part_title(part)} answer: #{answer.ljust(answer_width)}  #{elapsed_time(elapsed)}"
     end
 
     def real_exception(part, exception, elapsed)
-      puts "  #{red(icon(:boom))} part #{part} raised #{exception.class}  (#{ms(elapsed)})"
+      puts "  #{red(icon(:boom))} #{part_title(part)} raised #{exception.class}  #{elapsed_time(elapsed)}"
       puts "     #{exception.message}"
       print_backtrace(exception)
     end
@@ -115,6 +126,19 @@ module AOC
       "#{text[0, 157]}..."
     end
 
+    def example_title(label, part)
+      "#{blue(label)} · #{part_title(part)}"
+    end
+
+    def part_title(part)
+      text = "part #{part}"
+      (part == 1) ? yellow(text) : magenta(text)
+    end
+
+    def elapsed_time(elapsed)
+      dim("(#{ms(elapsed)})")
+    end
+
     def ms(elapsed)
       milliseconds = elapsed * 1000
 
@@ -133,6 +157,8 @@ module AOC
         ok: "✅",
         fail: "❌",
         star: "⭐",
+        empty_star: "☆",
+        skip: "⏩",
         boom: "💥"
       }.fetch(name)
     end
@@ -143,6 +169,8 @@ module AOC
         ok: "[ok]",
         fail: "[fail]",
         star: "*",
+        empty_star: "-",
+        skip: "[skip]",
         boom: "[error]"
       }.fetch(name)
     end
@@ -161,6 +189,14 @@ module AOC
 
     def cyan(text)
       color(36, text)
+    end
+
+    def blue(text)
+      color(34, text)
+    end
+
+    def magenta(text)
+      color(35, text)
     end
 
     def bold(text)
@@ -192,21 +228,7 @@ module AOC
       exit(false)
     end
 
-    expected_parts = examples.flat_map { |example| example.expected.keys }.uniq
-    missing = expected_parts - parts
-
-    unless missing.empty?
-      missing_declarations = missing.map { |number| "part#{number}:" }.join(", ")
-      missing_definitions = missing.map { |number| "def part#{number}" }.join(" and ")
-      verb = missing.one? ? "was" : "were"
-
-      UI.config_error(
-        "An example declares #{missing_declarations}, but #{missing_definitions} #{verb} not defined."
-      )
-      exit(false)
-    end
-
-    run_examples!
+    run_examples!(parts)
     run_real_input!(year, day, parts)
   rescue SystemExit
     raise
@@ -215,30 +237,31 @@ module AOC
     exit(false)
   end
 
-  def run_examples!
+  def run_examples!(parts)
     return if examples.empty?
 
     UI.examples_header
 
     examples.each_with_index do |example, index|
-      label = example.name || "example #{index + 1}"
+      label = example.name || "example #{format("%2d", index + 1)}"
 
       example.expected.each do |part, expected|
-        started = monotonic_time
+        unless parts.include?(part)
+          UI.example_skip(label, part)
+          next
+        end
 
         begin
           actual = solve(part, example.input)
-          elapsed = monotonic_time - started
         rescue => e
-          elapsed = monotonic_time - started
-          UI.example_exception(label, part, e, elapsed)
+          UI.example_exception(label, part, e)
           exit(false)
         end
 
         if actual == expected
-          UI.example_ok(label, part, actual, elapsed)
+          UI.example_ok(label, part, actual)
         else
-          UI.example_fail(label, part, expected, actual, elapsed)
+          UI.example_fail(label, part, expected, actual)
           exit(false)
         end
       end
@@ -249,6 +272,7 @@ module AOC
     UI.real_header
 
     real_input = input_for(year, day)
+    results = []
 
     parts.each do |part|
       started = monotonic_time
@@ -262,8 +286,32 @@ module AOC
         exit(false)
       end
 
-      UI.real_part(part, answer, elapsed)
+      results << [part, answer, elapsed]
     end
+
+    answer_width = results.map { |_part, answer, _elapsed| UI.value(answer).length }.max || 0
+
+    results.each do |part, answer, elapsed|
+      UI.real_part(part, answer, elapsed, answer_width)
+    end
+  end
+
+  def run_all_day!
+    year, day = infer_year_day($PROGRAM_NAME)
+    real_input = input_for(year, day)
+
+    available_parts.each do |part|
+      started = monotonic_time
+      answer = solve(part, real_input)
+      elapsed = monotonic_time - started
+
+      puts "AOC_ALL_RESULT #{JSON.generate(day: day, part: part, answer: UI.value(answer), elapsed: elapsed)}"
+    end
+  rescue SystemExit
+    raise
+  rescue => e
+    UI.error(e)
+    exit(false)
   end
 
   def solve(part, raw_input)
@@ -461,6 +509,10 @@ if File.expand_path($PROGRAM_NAME) == File.expand_path(__FILE__)
   AOC.cli!(ARGV)
 elsif AOC.day_file?($PROGRAM_NAME)
   at_exit do
-    AOC.run! unless $!
+    if ENV["AOC_RUN_MODE"] == "all"
+      AOC.run_all_day! unless $!
+    else
+      AOC.run! unless $!
+    end
   end
 end
