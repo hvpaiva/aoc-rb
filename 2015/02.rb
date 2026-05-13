@@ -1,4 +1,6 @@
-require_relative "../aoc"
+# frozen_string_literal: true
+
+require_relative "../runner/aoc"
 
 example <<~INPUT, part1: 101, part2: 48
   2x3x4

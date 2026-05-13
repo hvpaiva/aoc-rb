@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 require "digest"
 
-require_relative "../aoc"
+require_relative "../runner/aoc"
 
 def part1 = mine(5)
 def part2 = mine(6)

@@ -1,4 +1,6 @@
-require_relative "../aoc"
+# frozen_string_literal: true
+
+require_relative "../runner/aoc"
 
 MOVES = {">" => 1, "^" => 1i, "<" => -1, "v" => -1i}.freeze
 

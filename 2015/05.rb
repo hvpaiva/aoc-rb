@@ -1,4 +1,6 @@
-require_relative "../aoc"
+# frozen_string_literal: true
+
+require_relative "../runner/aoc"
 
 VOWELS = "aeiou"
 DOUBLE = /(.)\1/

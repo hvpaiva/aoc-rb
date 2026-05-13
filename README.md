@@ -2,7 +2,7 @@
 
 Solutions for [Advent of Code](https://adventofcode.com/) challenges in Ruby.
 
-Solutions live in year/day files, such as `2024/02.rb`. The local runner is only here to reduce friction: create day files, download/cache inputs, run examples before the real input, and execute solutions through `ruby` or `rake`.
+Solutions live in year/day files, such as `2024/02.rb`. The runner in `runner/` is an internal support tool: it creates day files, downloads/caches inputs, runs examples before real input, and executes solutions through `ruby` or `rake`. The challenge solutions are the focus of the repository; the runner is not a gem, product, or public library.
 
 ## Setup
 
@@ -58,10 +58,28 @@ rake 2024:02
 rake 'all[2024]'
 ```
 
+## Progress overview
+
+```sh
+rake all
+```
+
+`rake all` without a year shows global progress. `rake 'all[YYYY]'` runs the real inputs for existing days in that year.
+
+## Checks
+
+```sh
+rake check
+```
+
+This validates Ruby syntax, runs Standard Ruby, and executes the runner test suite under `runner/test/`.
+
 ## Day file format
 
 ```ruby
-require_relative "../aoc"
+# frozen_string_literal: true
+
+require_relative "../runner/aoc"
 
 example <<~INPUT, part1: 2
   ...
@@ -89,3 +107,7 @@ end
 ```
 
 Do not define `part2` before starting Part 2.
+
+## Runner structure
+
+The Rakefile is a thin interface for public commands. Runner internals live under `runner/aoc/`, with `runner/aoc.rb` as the entry point used by challenge files. Tests for the runner live under `runner/test/`.
