@@ -32,6 +32,12 @@ export AOC_USER_AGENT='github.com/your-user/your-repo by your-email@example.com'
 
 Inputs are cached under `inputs/`. Cached inputs are reused locally and do not trigger HTTP requests. New downloads are throttled to one request every 300 seconds by default; override with `AOC_MIN_INTERVAL_SECONDS` when needed.
 
+Optional environment variables:
+
+- `AOC_ASCII=1` swaps the emoji icons for plain ASCII (`*`, `!`, `>`, ...). Useful for terminals without Unicode glyphs.
+- `AOC_DEBUG=1` prints the full backtrace when a solution raises instead of the first 5 lines.
+- `AOC_CONFIG_DIR` overrides the default config directory (`~/.config/aoc-rb`).
+
 ## Create a day
 
 ```sh
@@ -66,13 +72,21 @@ rake all
 
 `rake all` without a year shows global progress. `rake 'all[YYYY]'` runs the real inputs for existing days in that year.
 
-## Checks
+## Checks and tests
 
 ```sh
 rake check
 ```
 
 This validates Ruby syntax, runs Standard Ruby, and executes the runner test suite under `runner/test/`.
+
+To run only the runner tests:
+
+```sh
+rake test
+```
+
+The test suite uses SimpleCov; coverage reports are written to `coverage/` after each run.
 
 ## Day file format
 
@@ -81,29 +95,27 @@ This validates Ruby syntax, runs Standard Ruby, and executes the runner test sui
 
 require_relative "../runner/aoc"
 
-example <<~INPUT, part1: 2
-  ...
-INPUT
-
-def parsed
-  @parsed ||= input.lines(chomp: true)
-end
+def parsed = @parsed ||= input.lines(chomp: true)
 
 def part1
   raise "part1 not implemented"
 end
-```
 
-When Part 2 exists:
-
-```ruby
-example <<~INPUT, part1: 2, part2: 4
+example <<~INPUT, part1: 2
   ...
 INPUT
+```
 
+When Part 2 exists, define it below `part1` and extend the example block:
+
+```ruby
 def part2
   ...
 end
+
+example <<~INPUT, part1: 2, part2: 4
+  ...
+INPUT
 ```
 
 Do not define `part2` before starting Part 2.
@@ -111,3 +123,5 @@ Do not define `part2` before starting Part 2.
 ## Runner structure
 
 The Rakefile is a thin interface for public commands. Runner internals live under `runner/aoc/`, with `runner/aoc.rb` as the entry point used by challenge files. Tests for the runner live under `runner/test/`.
+
+For a walkthrough of the runner's design (modules, boot lifecycle, error contract, network contract), see [`runner/ARCHITECTURE.md`](runner/ARCHITECTURE.md).

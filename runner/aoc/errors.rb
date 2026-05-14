@@ -5,5 +5,5 @@ module AOC
 
   class UserError < Error; end
 
-  class CommandFailed < UserError; end
+  class CommandFailed < Error; end
 end

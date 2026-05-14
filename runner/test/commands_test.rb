@@ -121,34 +121,36 @@ class CommandsTest < Minitest::Test
     assert_equal "Year must be an integer.", error.message
   end
 
-  def test_cli_reports_usage_for_unknown_command
-    stderr = StringIO.new
-    exits = []
+  def test_run_year_does_not_mask_argument_errors_from_collaborators
+    paths = Object.new
+    paths.define_singleton_method(:day_files) { |_year| raise ArgumentError, "boom from collaborator" }
 
-    AOC::Commands.cli!(["unknown"], error: stderr, exiter: ->(success) { exits << success })
+    error = assert_raises(ArgumentError) { AOC::Commands.run_year("2024", paths: paths) }
 
-    assert_includes stderr.string, "Usage: ruby runner/aoc.rb new 2024 1"
-    assert_equal [false], exits
+    assert_equal "boom from collaborator", error.message
   end
 
-  def test_cli_reports_usage_for_missing_new_arguments
-    stderr = StringIO.new
-    exits = []
+  def test_test_command_reports_when_no_test_files_found
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
 
-    AOC::Commands.cli!(["new"], error: stderr, exiter: ->(success) { exits << success })
+      error = assert_raises(AOC::UserError) do
+        AOC::Commands.test(paths: paths, command_runner: ->(*_) { true })
+      end
 
-    assert_includes stderr.string, "Usage: ruby runner/aoc.rb new 2024 1"
-    assert_equal [false], exits
+      assert_equal "No runner tests found.", error.message
+    end
   end
 
-  def test_cli_delegates_new_command_and_reports_scaffolding_errors
-    stderr = StringIO.new
-    exits = []
+  def test_check_files_excludes_missing_root_files
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
 
-    AOC::Commands.cli!(["new", "2014", "2"], error: stderr, exiter: ->(success) { exits << success })
+      files = AOC::Commands.check_files(paths)
 
-    assert_includes stderr.string, "Year must be 2015 or later."
-    assert_equal [false], exits
+      refute files.any? { |f| f.basename.to_s == "Gemfile" }
+      refute files.any? { |f| f.basename.to_s == "Rakefile" }
+    end
   end
 
   def test_run_all_day_reports_failed_process_without_output
@@ -233,6 +235,16 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_running_aoc_rb_directly_prints_help
+    with_project do |root|
+      stdout, _stderr, status = run_ruby(root, "runner/aoc.rb", env: {"AOC_ASCII" => "1", "NO_COLOR" => "1"})
+
+      assert status.success?
+      assert_includes stdout, "rake 'new[2024,2]'"
+      assert_includes stdout, "rake 2024:02"
+    end
+  end
+
   def test_all_mode_outputs_machine_readable_results
     with_project do |root|
       write_file(root.join("2024", "02.rb"), <<~RUBY)
@@ -250,7 +262,7 @@ class CommandsTest < Minitest::Test
 
       assert status.success?, stderr
       assert_includes stdout, "AOC_ALL_RESULT"
-      assert_includes stdout, '"answer":"\\"ABCD\\""'
+      assert_includes stdout, '"answer":"ABCD"'
       refute_includes stdout, "Examples"
     end
   end

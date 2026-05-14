@@ -2,24 +2,42 @@
 
 module AOC
   module Boot
-    module_function
+    class << self
+      def install!(program_name: $PROGRAM_NAME, env: ENV, at_exit_handler: Kernel.method(:at_exit), runner_factory: Runner.method(:new), failure: -> { $! })
+        install_dsl
+        install_auto_runner(
+          program_name: program_name,
+          env: env,
+          at_exit_handler: at_exit_handler,
+          runner_factory: runner_factory,
+          failure: failure
+        )
+      end
 
-    def install!(program_name: $PROGRAM_NAME, env: ENV, at_exit_handler: Kernel.method(:at_exit), runner_factory: Runner.method(:new), failure: -> { $! })
-      DSL.install!
-      return if @installed
+      def reset!
+        @auto_runner_installed = false
+      end
 
-      @installed = true
-      return unless Paths.day_file?(program_name)
+      private
 
-      at_exit_handler.call do
-        next if failure.call
+      def install_dsl
+        DSL.install!
+      end
 
-        runner = runner_factory.call
+      def install_auto_runner(program_name:, env:, at_exit_handler:, runner_factory:, failure:)
+        return if @auto_runner_installed
+        return unless Paths.day_file?(program_name)
 
-        if env["AOC_RUN_MODE"] == "all"
-          runner.run_all_day!
-        else
-          runner.run!
+        @auto_runner_installed = true
+
+        at_exit_handler.call do
+          # `failure` is evaluated at at_exit time: $! is non-nil only when the
+          # process is unwinding from an unhandled exception. In that case we
+          # skip the auto-run so the original error keeps its exit semantics.
+          next if failure.call
+
+          runner = runner_factory.call
+          (env["AOC_RUN_MODE"] == "all") ? runner.run_all_day! : runner.run!
         end
       end
     end

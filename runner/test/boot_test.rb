@@ -3,16 +3,43 @@
 require_relative "test_helper"
 
 class BootTest < Minitest::Test
+  def setup
+    AOC::Boot.reset!
+  end
+
+  def teardown
+    AOC::Boot.reset!
+  end
+
   def test_install_is_idempotent_for_non_day_processes
-    original_installed = AOC::Boot.instance_variable_get(:@installed)
-    AOC::Boot.instance_variable_set(:@installed, nil)
+    handlers = []
+    at_exit_handler = ->(&block) { handlers << block }
 
-    AOC::Boot.install!(program_name: "runner/test/boot_test.rb")
-    AOC::Boot.install!(program_name: "runner/test/boot_test.rb")
+    AOC::Boot.install!(program_name: "runner/test/boot_test.rb", at_exit_handler: at_exit_handler)
+    AOC::Boot.install!(program_name: "runner/test/boot_test.rb", at_exit_handler: at_exit_handler)
 
-    assert_equal true, AOC::Boot.instance_variable_get(:@installed)
-  ensure
-    AOC::Boot.instance_variable_set(:@installed, original_installed)
+    assert_empty handlers, "non-day-file process should never register an at_exit handler"
+  end
+
+  def test_install_only_registers_auto_runner_once
+    handlers = []
+    at_exit_handler = ->(&block) { handlers << block }
+    runner_factory = -> { Object.new.tap { |r| r.define_singleton_method(:run!) { nil } } }
+
+    AOC::Boot.install!(
+      program_name: "2024/02.rb",
+      at_exit_handler: at_exit_handler,
+      runner_factory: runner_factory,
+      failure: -> {}
+    )
+    AOC::Boot.install!(
+      program_name: "2024/02.rb",
+      at_exit_handler: at_exit_handler,
+      runner_factory: runner_factory,
+      failure: -> {}
+    )
+
+    assert_equal 1, handlers.length
   end
 
   def test_install_registers_day_file_at_exit_for_normal_run
@@ -33,10 +60,29 @@ class BootTest < Minitest::Test
     assert_equal [:run_all_day], calls
   end
 
+  def test_install_skips_auto_runner_when_process_is_unwinding
+    captured_block = nil
+    calls = []
+    fake_runner = Object.new
+    fake_runner.define_singleton_method(:run!) { calls << :run }
+    at_exit_handler = ->(&block) { captured_block = block }
+
+    AOC::Boot.install!(
+      program_name: "2024/02.rb",
+      env: {},
+      at_exit_handler: at_exit_handler,
+      runner_factory: -> { fake_runner },
+      failure: -> { RuntimeError.new("uncaught") }
+    )
+
+    captured_block.call
+
+    assert_empty calls
+  end
+
   private
 
   def with_stubbed_day_file_boot(env: {})
-    original_installed = AOC::Boot.instance_variable_get(:@installed)
     captured_block = nil
     calls = []
     fake_runner = Object.new
@@ -44,8 +90,6 @@ class BootTest < Minitest::Test
     fake_runner.define_singleton_method(:run_all_day!) { calls << :run_all_day }
     at_exit_handler = ->(&block) { captured_block = block }
     runner_factory = -> { fake_runner }
-
-    AOC::Boot.instance_variable_set(:@installed, nil)
 
     AOC::Boot.install!(
       program_name: "2024/02.rb",
@@ -56,7 +100,5 @@ class BootTest < Minitest::Test
     )
 
     yield captured_block, calls
-  ensure
-    AOC::Boot.instance_variable_set(:@installed, original_installed)
   end
 end

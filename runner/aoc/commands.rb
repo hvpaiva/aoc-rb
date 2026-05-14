@@ -1,12 +1,21 @@
 # frozen_string_literal: true
 
 require "date"
-require "json"
 require "open3"
 require "rbconfig"
 
 module AOC
   module Commands
+    # Files included in `rake check` (syntax + style).
+    CHECK_FILES_AT_ROOT = %w[Gemfile Rakefile].freeze
+    CHECK_FILE_GLOBS = [
+      "runner/**/*.rb",
+      "[0-9][0-9][0-9][0-9]/[0-9][0-9].rb"
+    ].freeze
+
+    # Files included in `rake test`.
+    TEST_FILE_GLOB = "runner/test/**/*_test.rb"
+
     module_function
 
     def help
@@ -45,28 +54,32 @@ module AOC
       end
     end
 
-    def overview(paths: Paths.default)
+    def overview(paths: Paths.default, renderer: UI::Renderer.new)
       years = (2015..Date.today.year).to_a
       overview = years.map { |year| [year, SolutionStatus.year_stars(year, paths: paths)] }
 
-      UI.print_overview(overview)
+      renderer.print_overview(overview)
     end
 
-    def run_year(year, paths: Paths.default)
-      year = Integer(year)
+    def run_year(year, paths: Paths.default, renderer: UI::Renderer.new)
+      year = parse_year(year)
       day_paths = paths.day_files(year)
 
       raise UserError, "No days found for #{year}." if day_paths.empty?
 
       results = day_paths.flat_map { |path| run_all_day(path) }
 
-      UI.print_year_results(year, results)
+      renderer.print_year_results(year, results)
+    end
+
+    def parse_year(value)
+      Integer(value)
     rescue ArgumentError
       raise UserError, "Year must be an integer."
     end
 
     def check(paths: Paths.default, command_runner: method(:system))
-      files = paths.check_files.map { |path| paths.relative(path) }
+      files = check_files(paths).map { |path| paths.relative(path) }
 
       files.each do |path|
         run_command(command_runner, RbConfig.ruby, "-c", path)
@@ -77,8 +90,8 @@ module AOC
     end
 
     def test(paths: Paths.default, command_runner: method(:system))
-      test_files = paths.test_files.map { |path| paths.relative(path) }
-      raise UserError, "No runner tests found." if test_files.empty?
+      tests = test_files(paths).map { |path| paths.relative(path) }
+      raise UserError, "No runner tests found." if tests.empty?
 
       run_command(
         command_runner,
@@ -89,24 +102,25 @@ module AOC
         "-Irunner/test",
         "-e",
         "ARGV.each { |file| require File.expand_path(file) }",
-        *test_files
+        *tests
       )
     end
 
-    def cli!(argv, error: $stderr, exiter: Kernel.method(:exit))
-      command, year, day = argv
-
-      case command
-      when "new"
-        raise UserError, "Usage: ruby runner/aoc.rb new 2024 1" unless year && day
-
-        new_day(year, day)
-      else
-        raise UserError, "Usage: ruby runner/aoc.rb new 2024 1"
+    def check_files(paths)
+      files = CHECK_FILES_AT_ROOT.filter_map do |name|
+        candidate = paths.root.join(name)
+        candidate if candidate.exist?
       end
-    rescue UserError => e
-      error.puts e.message
-      exiter.call(false)
+
+      CHECK_FILE_GLOBS.each do |pattern|
+        files.concat(Pathname.glob(paths.root.join(pattern)))
+      end
+
+      files.uniq.sort_by(&:to_s)
+    end
+
+    def test_files(paths)
+      Pathname.glob(paths.root.join(TEST_FILE_GLOB)).sort_by(&:to_s)
     end
 
     def run_all_day(path, process_runner: Open3.method(:capture3), output: $stdout, error: $stderr)
@@ -118,11 +132,7 @@ module AOC
         raise CommandFailed, "Command failed: #{RbConfig.ruby} #{path}"
       end
 
-      stdout.each_line.filter_map do |line|
-        next unless line.start_with?("AOC_ALL_RESULT ")
-
-        JSON.parse(line.delete_prefix("AOC_ALL_RESULT "))
-      end
+      AllResultProtocol.parse(stdout)
     end
 
     def run_command(command_runner, *command)

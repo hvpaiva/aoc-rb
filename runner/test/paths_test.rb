@@ -25,12 +25,13 @@ class PathsTest < Minitest::Test
     paths = AOC::Paths.new(root: PROJECT_ROOT)
 
     assert_equal [2024, 2], paths.infer_year_day("/tmp/aoc/2024/02.rb")
-    assert_equal [2024, 2], paths.infer_year_day("/tmp/aoc/2024/day_2.rb")
   end
 
   def test_identifies_day_files
     assert AOC::Paths.day_file?("2024/02.rb")
     refute AOC::Paths.day_file?("runner/aoc.rb")
+    refute AOC::Paths.day_file?("2024/day_2.rb"), "non-canonical names should be rejected"
+    refute AOC::Paths.day_file?("2024/2.rb"), "non-zero-padded names should be rejected"
   end
 
   def test_infer_year_day_rejects_non_day_files
@@ -39,5 +40,21 @@ class PathsTest < Minitest::Test
     error = assert_raises(AOC::UserError) { paths.infer_year_day("runner/aoc.rb") }
 
     assert_equal 'Could not infer year/day from "runner/aoc.rb". Use a structure like 2024/02.rb.', error.message
+  end
+
+  def test_default_is_memoized
+    first = AOC::Paths.default
+    second = AOC::Paths.default
+
+    assert_same first, second
+  end
+
+  def test_reset_default_clears_the_memoization
+    AOC::Paths.default  # warm the cache
+    AOC::Paths.reset_default!
+
+    assert_nil AOC::Paths.instance_variable_get(:@default)
+  ensure
+    AOC::Paths.reset_default!
   end
 end

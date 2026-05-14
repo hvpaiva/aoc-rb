@@ -30,7 +30,7 @@ class DSLTest < Minitest::Test
     runner = Object.new
     runner.extend(AOC::DSL::RuntimeInput)
 
-    error = assert_raises(RuntimeError) { runner.__send__(:input) }
+    error = assert_raises(AOC::DSL::InputNotReadyError) { runner.__send__(:input) }
 
     assert_equal "input is not available yet", error.message
   end
@@ -45,7 +45,7 @@ class DSLTest < Minitest::Test
 
     assert_equal 1, AOC::DSL.examples.length
 
-    error = assert_raises(RuntimeError) do
+    error = assert_raises(AOC::DSL::InputNotReadyError) do
       target.instance_eval { input }
     end
     assert_equal "input is not available yet", error.message

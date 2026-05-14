@@ -1,16 +1,18 @@
 # frozen_string_literal: true
 
 module AOC
-  Example = Struct.new(:input, :expected, :name, keyword_init: true)
+  Example = Data.define(:input, :expected, :name)
 
   module DSL
     UNSET = Object.new.freeze
+
+    class InputNotReadyError < AOC::Error; end
 
     module RuntimeInput
       def input
         return @__aoc_input if instance_variable_defined?(:@__aoc_input)
 
-        raise "input is not available yet"
+        raise InputNotReadyError, "input is not available yet"
       end
 
       def __aoc_input=(value)
@@ -35,7 +37,7 @@ module AOC
         end
 
         target.define_singleton_method(:input) do
-          raise "input is not available yet"
+          raise InputNotReadyError, "input is not available yet"
         end
 
         target.singleton_class.send(:private, :example, :input)

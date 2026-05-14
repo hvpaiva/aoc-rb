@@ -23,4 +23,10 @@ class CalendarTest < Minitest::Test
 
     assert_equal "Year and day must be integers.", error.message
   end
+
+  def test_validate_year_day_rejects_pre_2015_year
+    error = assert_raises(AOC::UserError) { AOC::Calendar.validate_year_day!(2014, 1) }
+
+    assert_equal "Year must be 2015 or later.", error.message
+  end
 end
