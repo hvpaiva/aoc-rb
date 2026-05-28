@@ -2,13 +2,17 @@
 
 require_relative "../runner/aoc"
 
-INSTRUCTION = /\A(turn on|toggle|turn off) (\d+),(\d+) through (\d+),(\d+)\z/
+LINE = /\A(?<action>turn on|toggle|turn off) (?<x1>\d+),(?<y1>\d+) through (?<x2>\d+),(?<y2>\d+)\z/
 Instruction = Data.define(:action, :from_x, :from_y, :to_x, :to_y)
 
 def instructions
   @instructions ||= input.lines(chomp: true).map do |line|
-    m = INSTRUCTION.match(line) or raise "invalid line: #{line}"
-    Instruction.new(m[1].tr(" ", "_").to_sym, m[2].to_i, m[3].to_i, m[4].to_i, m[5].to_i)
+    m = LINE.match(line) or raise "invalid line: #{line}"
+    Instruction.new(
+      action: m[:action].tr(" ", "_").to_sym,
+      from_x: m[:x1].to_i, from_y: m[:y1].to_i,
+      to_x: m[:x2].to_i, to_y:   m[:y2].to_i
+    )
   end
 end
 
@@ -17,7 +21,7 @@ def part1
 end
 
 def part2
-  solve(turn_on: ->(v) { v + 1 }, turn_off: ->(v) { v.positive? ? v - 1 : 0 }, toggle: ->(v) { v + 2 })
+  solve(turn_on: ->(v) { v + 1 }, turn_off: ->(v) { [v - 1, 0].max }, toggle: ->(v) { v + 2 })
 end
 
 def solve(ops)
