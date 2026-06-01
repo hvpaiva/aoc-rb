@@ -14,12 +14,12 @@ module AOC
     TEMPLATE = <<~RUBY
       # frozen_string_literal: true
 
-      require_relative "../runner/aoc"
+      require_relative '../runner/aoc'
 
       def parsed = @parsed ||= input.lines(chomp: true)
 
       def part1
-        raise "part1 not implemented"
+        raise 'part1 not implemented'
       end
 
       # example <<~INPUT, part1: 0
