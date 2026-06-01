@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "json"
+require 'json'
 
 module AOC
   # Wire protocol between a day file running in AOC_RUN_MODE=all and the
@@ -9,12 +9,9 @@ module AOC
   # The child emits one MARKER-prefixed JSON line per solved part on stdout;
   # the parent scans stdout for the prefix and parses each match into a Result.
   module AllResultProtocol
-    MARKER = "AOC_ALL_RESULT "
+    MARKER = 'AOC_ALL_RESULT '
 
-    # `variant` is the slug of the originating file, or nil for the canonical
-    # day file. It defaults to nil so the year-run path (canonical files only)
-    # and existing callers keep constructing results without naming it; the
-    # comparison path sets it from {Paths#infer_variant}.
+    # `variant` is the originating file's slug, or nil for the canonical file.
     Result = Data.define(:day, :part, :answer, :elapsed, :variant) do
       def initialize(variant: nil, **rest) = super(**rest, variant: variant)
     end

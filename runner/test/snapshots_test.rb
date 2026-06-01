@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative 'test_helper'
 
 # Full-output (golden) tests. Treat these as visual contracts: when the
 # rendered output legitimately changes, update the expected heredoc. If a
@@ -13,8 +13,8 @@ require_relative "test_helper"
 class SnapshotsTest < Minitest::Test
   include RunnerTestSupport
 
-  ASCII_NO_COLOR = {"AOC_ASCII" => "1", "NO_COLOR" => "1"}.freeze
-  UNICODE_NO_COLOR = {"NO_COLOR" => "1"}.freeze
+  ASCII_NO_COLOR = { 'AOC_ASCII' => '1', 'NO_COLOR' => '1' }.freeze
+  UNICODE_NO_COLOR = { 'NO_COLOR' => '1' }.freeze
 
   def setup
     AOC::DSL.reset!
@@ -35,7 +35,7 @@ class SnapshotsTest < Minitest::Test
       def part1 = input.chomp.upcase
       def part2 = input.chomp.length
     end
-    AOC::DSL.add_example("abc\n", part1: "ABC", part2: 3)
+    AOC::DSL.add_example("abc\n", part1: 'ABC', part2: 3)
 
     output = StringIO.new
     ticks = [0.0, 0.001, 0.001, 0.0025]
@@ -45,7 +45,7 @@ class SnapshotsTest < Minitest::Test
       input_store: FakeInputStore.new("hello\n"),
       ui: AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR),
       clock: -> { ticks.shift }
-    ).run!(path: "2024/02.rb")
+    ).run!(path: '2024/02.rb')
 
     assert_equal <<~OUT, output.string
        Ruby Advent of Code 2024 day 02
@@ -62,11 +62,11 @@ class SnapshotsTest < Minitest::Test
 
   def test_ascii_example_failure
     Object.class_eval { def part1 = input.length }
-    AOC::DSL.add_example("abc", part1: 99)
+    AOC::DSL.add_example('abc', part1: 99)
 
     output = StringIO.new
     AOC::Runner.new(ui: ascii_renderer(output), exiter: noop_exiter)
-      .run_examples!([1])
+               .run_examples!([1])
 
     assert_equal <<~OUT, output.string
 
@@ -81,7 +81,7 @@ class SnapshotsTest < Minitest::Test
 
   def test_ascii_example_skip
     Object.class_eval { def part1 = input.length }
-    AOC::DSL.add_example("abc", part2: 4)
+    AOC::DSL.add_example('abc', part2: 4)
 
     output = StringIO.new
     AOC::Runner.new(ui: ascii_renderer(output)).run_examples!([1])
@@ -94,15 +94,15 @@ class SnapshotsTest < Minitest::Test
   end
 
   def test_ascii_example_exception
-    Object.class_eval { def part1 = raise "boom" }
-    AOC::DSL.add_example("abc", part1: 1)
+    Object.class_eval { def part1 = raise 'boom' }
+    AOC::DSL.add_example('abc', part1: 1)
 
     output = StringIO.new
     AOC::Runner.new(ui: ascii_renderer(output), exiter: noop_exiter)
-      .run_examples!([1])
+               .run_examples!([1])
 
     body = output.string.lines
-    backtrace_dropped = body.reject { |line| line.start_with?("     /") || line.match?(/\.rb:\d+/) }
+    backtrace_dropped = body.reject { |line| line.start_with?('     /') || line.match?(/\.rb:\d+/) }
 
     assert_equal <<~OUT.lines.first(4), backtrace_dropped.first(4)
 
@@ -110,17 +110,17 @@ class SnapshotsTest < Minitest::Test
         x example  1 · part 1  raised RuntimeError
            boom
     OUT
-    assert_includes output.string, "Stopped before real input."
+    assert_includes output.string, 'Stopped before real input.'
   end
 
   def test_ascii_real_input_exception
-    Object.class_eval { def part1 = raise "real boom" }
+    Object.class_eval { def part1 = raise 'real boom' }
 
     output = StringIO.new
     ticks = [0.0, 0.002]
 
     AOC::Runner.new(
-      input_store: FakeInputStore.new("abc"),
+      input_store: FakeInputStore.new('abc'),
       ui: ascii_renderer(output),
       clock: -> { ticks.shift },
       exiter: noop_exiter
@@ -138,10 +138,10 @@ class SnapshotsTest < Minitest::Test
     output = StringIO.new
     AOC::Runner.new(
       paths: FakePaths.new(year: 2024, day: 2),
-      input_store: FakeInputStore.new("input"),
+      input_store: FakeInputStore.new('input'),
       ui: ascii_renderer(output),
       exiter: noop_exiter
-    ).run!(path: "2024/02.rb")
+    ).run!(path: '2024/02.rb')
 
     assert_equal <<~OUT, output.string
        Ruby Advent of Code 2024 day 02
@@ -152,15 +152,15 @@ class SnapshotsTest < Minitest::Test
 
   def test_ascii_top_level_error
     paths = Object.new
-    paths.define_singleton_method(:infer_year_day) { |_| raise "infrastructure exploded" }
+    paths.define_singleton_method(:infer_year_day) { |_| raise 'infrastructure exploded' }
 
     output = StringIO.new
     AOC::Runner.new(
       paths: paths,
-      input_store: FakeInputStore.new("input"),
+      input_store: FakeInputStore.new('input'),
       ui: ascii_renderer(output),
       exiter: noop_exiter
-    ).run!(path: "broken.rb")
+    ).run!(path: 'broken.rb')
 
     # The first two lines are stable; the backtrace lines that follow depend
     # on where the test is invoked from. We snapshot the header and assert
@@ -172,7 +172,7 @@ class SnapshotsTest < Minitest::Test
     OUT
     backtrace_lines = output.string.lines.drop(2)
     refute_empty backtrace_lines
-    assert backtrace_lines.all? { |line| line.start_with?("     ") }, "backtrace lines should be indented"
+    assert backtrace_lines.all? { |line| line.start_with?('     ') }, 'backtrace lines should be indented'
   end
 
   def test_ascii_overview_grid
@@ -197,8 +197,8 @@ class SnapshotsTest < Minitest::Test
   def test_ascii_year_results
     output = StringIO.new
     results = [
-      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "42", elapsed: 0.001),
-      AOC::AllResultProtocol::Result.new(day: 2, part: 1, answer: "longer", elapsed: 0.0123)
+      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: '42', elapsed: 0.001),
+      AOC::AllResultProtocol::Result.new(day: 2, part: 1, answer: 'longer', elapsed: 0.0123)
     ]
 
     AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR).print_year_results(2024, results)
@@ -217,8 +217,8 @@ class SnapshotsTest < Minitest::Test
     output = StringIO.new
     result = ->(part, answer, elapsed) { AOC::AllResultProtocol::Result.new(day: 6, part: part, answer: answer, elapsed: elapsed) }
     variants = [
-      ["base", [result.call(1, "543903", 0.0123), result.call(2, "1060", 0.015)], true],
-      ["bitset", [result.call(1, "543903", 0.004), result.call(2, "1060", 0.005)], true]
+      ['base', [result.call(1, '543903', 0.0123), result.call(2, '1060', 0.015)], true],
+      ['bitset', [result.call(1, '543903', 0.004), result.call(2, '1060', 0.005)], true]
     ]
 
     AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR).print_day_comparison(2015, 6, variants)
@@ -237,10 +237,10 @@ class SnapshotsTest < Minitest::Test
     output = StringIO.new
     result = ->(answer, elapsed) { AOC::AllResultProtocol::Result.new(day: 6, part: 1, answer: answer, elapsed: elapsed) }
     variants = [
-      ["base", [result.call("543903", 0.0123)], true],
-      ["wrong", [result.call("999", 0.004)], true],
-      ["boom", [], false],
-      ["empty", [], true]
+      ['base', [result.call('543903', 0.0123)], true],
+      ['wrong', [result.call('999', 0.004)], true],
+      ['boom', [], false],
+      ['empty', [], true]
     ]
 
     AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR).print_day_comparison(2015, 6, variants)
@@ -259,8 +259,8 @@ class SnapshotsTest < Minitest::Test
 
   def test_ascii_day_comparison_marks_partial_failure_after_its_results
     output = StringIO.new
-    partial = AOC::AllResultProtocol::Result.new(day: 6, part: 1, answer: "543903", elapsed: 0.0123)
-    variants = [["base", [partial], false]]
+    partial = AOC::AllResultProtocol::Result.new(day: 6, part: 1, answer: '543903', elapsed: 0.0123)
+    variants = [['base', [partial], false]]
 
     AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR).print_day_comparison(2015, 6, variants)
 
@@ -276,7 +276,7 @@ class SnapshotsTest < Minitest::Test
 
   def test_unicode_human_run_uses_emoji_icons
     Object.class_eval { def part1 = input.chomp.upcase }
-    AOC::DSL.add_example("abc\n", part1: "ABC")
+    AOC::DSL.add_example("abc\n", part1: 'ABC')
 
     output = StringIO.new
     ticks = [0.0, 0.001]
@@ -286,7 +286,7 @@ class SnapshotsTest < Minitest::Test
       input_store: FakeInputStore.new("hi\n"),
       ui: AOC::UI::Renderer.new(output: output, env: UNICODE_NO_COLOR),
       clock: -> { ticks.shift }
-    ).run!(path: "2024/02.rb")
+    ).run!(path: '2024/02.rb')
 
     assert_equal <<~OUT, output.string
       🎄 Ruby Advent of Code 2024 day 02
@@ -322,32 +322,33 @@ class SnapshotsTest < Minitest::Test
 
   def test_color_emits_ansi_escapes_when_tty_and_color_allowed
     output = tty_stringio
-    AOC::UI::Renderer.new(output: output, env: ascii_with_term("xterm-256color"))
-      .example_ok("example  1", 1, 42)
+    AOC::UI::Renderer.new(output: output, env: ascii_with_term('xterm-256color'))
+                     .example_ok('example  1', 1, 42)
 
-    assert_equal "  \e[32m*\e[0m \e[34mexample  1\e[0m · \e[33mpart 1\e[0m  \e[2mexpected = got = 42\e[0m\n", output.string
+    assert_equal "  \e[32m*\e[0m \e[34mexample  1\e[0m · \e[33mpart 1\e[0m  \e[2mexpected = got = 42\e[0m\n",
+                 output.string
   end
 
   def test_color_omits_ansi_when_output_is_not_a_tty
     output = StringIO.new # not a TTY
-    AOC::UI::Renderer.new(output: output, env: ascii_with_term("xterm-256color"))
-      .example_ok("example  1", 1, 42)
+    AOC::UI::Renderer.new(output: output, env: ascii_with_term('xterm-256color'))
+                     .example_ok('example  1', 1, 42)
 
     refute_includes output.string, "\e["
   end
 
   def test_color_omits_ansi_when_env_has_no_color
     output = tty_stringio
-    env = ASCII_NO_COLOR.merge("TERM" => "xterm-256color")
-    AOC::UI::Renderer.new(output: output, env: env).example_ok("example  1", 1, 42)
+    env = ASCII_NO_COLOR.merge('TERM' => 'xterm-256color')
+    AOC::UI::Renderer.new(output: output, env: env).example_ok('example  1', 1, 42)
 
     refute_includes output.string, "\e["
   end
 
   def test_color_omits_ansi_when_term_is_dumb
     output = tty_stringio
-    AOC::UI::Renderer.new(output: output, env: ascii_with_term("dumb"))
-      .example_ok("example  1", 1, 42)
+    AOC::UI::Renderer.new(output: output, env: ascii_with_term('dumb'))
+                     .example_ok('example  1', 1, 42)
 
     refute_includes output.string, "\e["
   end
@@ -366,7 +367,12 @@ class SnapshotsTest < Minitest::Test
         rake all                   # show global progress
         rake 'all[2024]'           # run real inputs for a year
         rake 'all[2024,2]'         # compare a day's variants on real input
-        rake check                 # validate Ruby syntax, style, and tests
+        rake check                 # lint the solutions (RuboCop study aid)
+        rake ci                    # full gate: runner checks + solution lint
+
+      Runner (the tool) maintenance:
+        rake runner:test           # run the runner test suite
+        rake runner:check          # syntax + RuboCop + tests for runner/
 
       Direct execution also works:
         ruby 2024/02.rb
@@ -376,7 +382,7 @@ class SnapshotsTest < Minitest::Test
 
   def test_new_day_created_snapshot
     Dir.mktmpdir do |dir|
-      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, 'config'))
       output = StringIO.new
       error = StringIO.new
 
@@ -389,7 +395,7 @@ class SnapshotsTest < Minitest::Test
 
   def test_new_day_already_exists_snapshot
     Dir.mktmpdir do |dir|
-      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, 'config'))
       write_file(paths.day_path(2024, 8), "preexisting\n")
       output = StringIO.new
       error = StringIO.new
@@ -408,7 +414,7 @@ class SnapshotsTest < Minitest::Test
   end
 
   def ascii_with_term(term)
-    {"AOC_ASCII" => "1", "TERM" => term}
+    { 'AOC_ASCII' => '1', 'TERM' => term }
   end
 
   def tty_stringio

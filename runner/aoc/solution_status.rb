@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "prism"
+require 'prism'
 
 module AOC
   # Reports which day files have implemented part1 and part2. Used by both
@@ -11,7 +11,7 @@ module AOC
   # by Scaffolder, i.e. `raise "partN not implemented"`. Any other body is
   # treated as implemented.
   module SolutionStatus
-    PART_NAMES = {1 => :part1, 2 => :part2}.freeze
+    PART_NAMES = { 1 => :part1, 2 => :part2 }.freeze
 
     module_function
 
@@ -77,7 +77,7 @@ module AOC
       when Prism::StringNode
         node.unescaped
       when Prism::InterpolatedStringNode
-        return nil unless node.parts.all? { |part| part.is_a?(Prism::StringNode) }
+        return nil unless node.parts.all?(Prism::StringNode)
 
         node.parts.map(&:unescaped).join
       end

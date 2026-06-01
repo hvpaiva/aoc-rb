@@ -95,21 +95,26 @@ rake all
 
 `rake all` without a year shows global progress. `rake 'all[YYYY]'` runs the real inputs for existing days in that year.
 
-## Checks and tests
+## Studying the solutions
+
+The solutions are the focus, so `rake check` lints the day files (and variants) with RuboCop + `rubocop-performance`, pointing out idiom, complexity, and slow-pattern improvements:
 
 ```sh
 rake check
 ```
 
-This validates Ruby syntax, runs Standard Ruby, and executes the runner test suite under `runner/test/`.
+## Checks and tests
 
-To run only the runner tests:
+RuboCop is the single linter for the whole repo — the solutions and the runner share one config (`.rubocop.yml`) and the same rules. There is no separate tool for the runner:
 
 ```sh
-rake test
+rake runner:test    # run the runner test suite (alias: rake test)
+rake runner:lint    # syntax + RuboCop over runner/, Gemfile, Rakefile
+rake runner:check   # runner:lint + runner:test
+rake ci             # full gate: runner:check + rake check (what CI runs)
 ```
 
-The test suite uses SimpleCov; coverage reports are written to `coverage/` after each run.
+`rake ci` is the complete gate used by CI: RuboCop must pass on the whole repo and the runner tests must be green. The config keeps RuboCop's defaults and only relaxes a few arbitrary thresholds (method/class length, etc.) to project-appropriate values — the cops that teach (Performance, Lint, Style idiom) stay strict. The runner test suite uses SimpleCov; coverage reports are written to `coverage/` after each run.
 
 ## Day file format
 

@@ -23,7 +23,7 @@ runner/
     scaffolder.rb             # Generates day files from a template.
     runner.rb                 # Solves parts: examples + real input, or all-mode JSON emission.
     all_result_protocol.rb    # MARKER + Data.define Result (incl. variant) + emit/parse for AOC_RUN_MODE=all.
-    commands.rb               # Public Rake-facing commands: help, new_day, run_day, all, run_day_comparison, check, test.
+    commands.rb               # Public Rake-facing commands: help, new_day, run_day, all, run_day_comparison, check (solutions), ci, runner_check, lint_runner, test.
     boot.rb                   # Installs DSL and registers the at_exit auto-runner for day files.
   test/
     test_helper.rb            # Loads aoc.rb and support/fakes.rb. Defines RunnerTestSupport helpers.
@@ -200,8 +200,20 @@ Each public class takes its collaborators as keyword arguments with sensible def
 
 ## Testing posture
 
-- Tests live in `runner/test/`, mirror the production layout, and run via `rake test` or `rake check`.
+- Tests live in `runner/test/`, mirror the production layout, and run via `rake runner:test` (aliased as `rake test`) or as part of `rake runner:check` / `rake ci`.
 - Each module has a focused test file. `UI` is split into `ui/ansi_test.rb`, `ui/format_test.rb`, `ui/renderer_test.rb`.
 - Network is never hit: `Downloader` tests inject `FakeHTTP` and `FakeSleeper`.
 - Subprocess tests (`Commands.run_all_day`, end-to-end day execution) shell out via `Open3.capture3` using `run_ruby` from `RunnerTestSupport`. These cost more wall time but exercise the real boot path.
 - Tests that exercise `def part1`/`def part2` clean those methods off `Object` in `teardown`. That cleanup is the cost of keeping day files free of class wrappers (see "Object pollution" above).
+
+## Linting
+
+**RuboCop (+ rubocop-performance) is the single linter for the whole repo.** The solutions and the runner share one `.rubocop.yml` and the same rules; there is no second tool. Linting is a strict, blocking gate (not advisory): `rake ci` requires RuboCop to pass on the entire repo and the runner tests to be green.
+
+The repo is still solution-first at the task level, so the commands are split by what you run when, even though the rules are uniform:
+
+- `rake check` lints the **solutions** (`20NN/NN.rb` + variants) — the surface you run while studying.
+- `rake runner:lint` lints the **runner** (`runner/**`, `Gemfile`, `Rakefile`); `rake runner:check` adds the test suite.
+- `rake ci` = `runner:check` + `check`. Both call the shared `Commands.lint` helper (`ruby -c` per file, then `rubocop`) over `runner_files` and `solution_files` respectively.
+
+No house style was ever defined, so `.rubocop.yml` adopts RuboCop's defaults and only adjusts where the defaults are arbitrary thresholds rather than genuine lessons: Metrics limits (method/class length, ABC, complexity) are raised to project-appropriate values and excluded from the tests, `Style/Documentation` is off (namespaces and test classes need no preamble), and a few short domain parameter names are allowed. The cops that actually teach — Performance, Lint, and Style idiom (parallel assignment, numeric literals, ...) — are left fully strict.

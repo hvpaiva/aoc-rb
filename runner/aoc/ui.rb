@@ -5,6 +5,6 @@ module AOC
   end
 end
 
-require_relative "ui/ansi"
-require_relative "ui/format"
-require_relative "ui/renderer"
+require_relative 'ui/ansi'
+require_relative 'ui/format'
+require_relative 'ui/renderer'

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "fileutils"
-require "net/http"
-require "openssl"
-require "uri"
+require 'fileutils'
+require 'net/http'
+require 'openssl'
+require 'uri'
 
 module AOC
   # Fetches puzzle input from adventofcode.com. Enforces a polite throttle,
@@ -34,7 +34,13 @@ module AOC
     # @param sleeper [#sleep] anything that responds to `sleep(seconds)`.
     # @param clock [#call] zero-argument callable returning the current
     #   time in integer seconds.
-    def initialize(paths: Paths.default, config: Config.new(paths: paths), http: Net::HTTP, sleeper: Kernel, clock: -> { Time.now.to_i })
+    def initialize(
+      paths: Paths.default,
+      config: Config.new(paths: paths),
+      http: Net::HTTP,
+      sleeper: Kernel,
+      clock: -> { Time.now.to_i }
+    )
       @paths = paths
       @config = config
       @http = http
@@ -83,8 +89,8 @@ module AOC
       ) do |client|
         request = Net::HTTP::Get.new(uri)
         # Tolerate raw cookie with or without the "session=" prefix.
-        request["Cookie"] = "session=#{session.sub(/\Asession=/, "")}"
-        request["User-Agent"] = user_agent
+        request['Cookie'] = "session=#{session.delete_prefix('session=')}"
+        request['User-Agent'] = user_agent
         client.request(request)
       end
     rescue *NETWORK_EXCEPTIONS => e
@@ -97,7 +103,7 @@ module AOC
         nil
       when Net::HTTPRedirection
         # AoC redirects to the login page when the session cookie is invalid or expired.
-        raise UserError, "Session cookie likely expired. Refresh AOC_SESSION or #{@paths.config_dir.join("session")}."
+        raise UserError, "Session cookie likely expired. Refresh AOC_SESSION or #{@paths.config_dir.join('session')}."
       else
         raise UserError, "Failed to download input for #{year}/#{day}: HTTP #{response.code} #{response.message}"
       end
@@ -108,7 +114,7 @@ module AOC
       return if min_interval <= 0
 
       FileUtils.mkdir_p(@paths.cache_dir)
-      stamp = @paths.cache_dir.join("last_request_at")
+      stamp = @paths.cache_dir.join('last_request_at')
 
       if stamp.exist?
         elapsed = now - stamp.read.to_i

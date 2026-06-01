@@ -1,4 +1,4 @@
-name: check
+name: ci
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
   pull_request:
 
 jobs:
-  check:
-    name: rake check
+  ci:
+    name: rake ci
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,8 +18,8 @@ jobs:
           ruby-version: '.ruby-version'
           bundler-cache: true
 
-      - name: rake check
-        run: bundle exec rake check
+      - name: rake ci
+        run: bundle exec rake ci
         env:
           NO_COLOR: '1'
           AOC_ASCII: '1'

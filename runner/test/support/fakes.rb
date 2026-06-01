@@ -21,7 +21,7 @@ module RunnerTestSupport
       raise @error if @error
 
       if block
-        block.call(FakeHTTPClient.new(@response, @captured))
+        yield(FakeHTTPClient.new(@response, @captured))
       else
         @response
       end

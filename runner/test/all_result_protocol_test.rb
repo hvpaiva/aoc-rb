@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative 'test_helper'
 
 class AllResultProtocolTest < Minitest::Test
   def test_emit_writes_marker_prefixed_json_line
     io = StringIO.new
-    result = AOC::AllResultProtocol::Result.new(day: 2, part: 1, answer: "cba", elapsed: 0.125)
+    result = AOC::AllResultProtocol::Result.new(day: 2, part: 1, answer: 'cba', elapsed: 0.125)
 
     AOC::AllResultProtocol.emit(io, result)
 
@@ -14,7 +14,7 @@ class AllResultProtocolTest < Minitest::Test
     assert_includes io.string, '"part":1'
     assert_includes io.string, '"answer":"cba"'
     assert_includes io.string, '"elapsed":0.125'
-    assert io.string.end_with?("\n"), "emit should terminate the line"
+    assert io.string.end_with?("\n"), 'emit should terminate the line'
   end
 
   def test_parse_returns_results_for_marker_lines
@@ -26,8 +26,8 @@ class AllResultProtocolTest < Minitest::Test
     results = AOC::AllResultProtocol.parse(stdout)
 
     assert_equal 2, results.length
-    assert_equal AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "42", elapsed: 0.001), results[0]
-    assert_equal AOC::AllResultProtocol::Result.new(day: 1, part: 2, answer: "foo", elapsed: 0.002), results[1]
+    assert_equal AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: '42', elapsed: 0.001), results[0]
+    assert_equal AOC::AllResultProtocol::Result.new(day: 1, part: 2, answer: 'foo', elapsed: 0.002), results[1]
   end
 
   def test_parse_ignores_lines_without_marker
@@ -50,8 +50,8 @@ class AllResultProtocolTest < Minitest::Test
   def test_emit_and_parse_roundtrip
     io = StringIO.new
     original = [
-      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "a", elapsed: 0.1),
-      AOC::AllResultProtocol::Result.new(day: 2, part: 2, answer: "b", elapsed: 0.2)
+      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: 'a', elapsed: 0.1),
+      AOC::AllResultProtocol::Result.new(day: 2, part: 2, answer: 'b', elapsed: 0.2)
     ]
     original.each { |r| AOC::AllResultProtocol.emit(io, r) }
 
@@ -59,13 +59,13 @@ class AllResultProtocolTest < Minitest::Test
   end
 
   def test_result_is_immutable_value_type
-    result = AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "x", elapsed: 0.1)
+    result = AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: 'x', elapsed: 0.1)
 
     assert_raises(NoMethodError) { result.day = 2 }
   end
 
   def test_variant_defaults_to_nil_when_unspecified
-    result = AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "x", elapsed: 0.1)
+    result = AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: 'x', elapsed: 0.1)
 
     assert_nil result.variant
   end
@@ -73,8 +73,8 @@ class AllResultProtocolTest < Minitest::Test
   def test_variant_roundtrips_through_emit_and_parse
     io = StringIO.new
     original = [
-      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "a", elapsed: 0.1, variant: nil),
-      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "a", elapsed: 0.1, variant: "bitset")
+      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: 'a', elapsed: 0.1, variant: nil),
+      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: 'a', elapsed: 0.1, variant: 'bitset')
     ]
     original.each { |result| AOC::AllResultProtocol.emit(io, result) }
 
@@ -82,6 +82,6 @@ class AllResultProtocolTest < Minitest::Test
 
     assert_equal original, parsed
     assert_nil parsed[0].variant
-    assert_equal "bitset", parsed[1].variant
+    assert_equal 'bitset', parsed[1].variant
   end
 end

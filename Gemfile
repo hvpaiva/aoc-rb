@@ -1,16 +1,20 @@
 # frozen_string_literal: true
 
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-ruby ">= 4.0.0"
+ruby '>= 4.0.0'
 
-gem "rake", "~> 13.0"
+gem 'rake', '~> 13.0'
 
 group :development do
-  gem "standard", "~> 1.0"
+  # RuboCop (+ performance) is the single linter for the whole repo — runner
+  # and solutions alike, same rules. It is a strict quality gate and a study
+  # aid: it surfaces idiom, complexity, and slow-pattern improvements.
+  gem 'rubocop', require: false
+  gem 'rubocop-performance', require: false
 end
 
 group :test do
-  gem "minitest", "~> 6.0"
-  gem "simplecov", "~> 0.22", require: false
+  gem 'minitest', '~> 6.0'
+  gem 'simplecov', '~> 0.22', require: false
 end

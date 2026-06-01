@@ -5,7 +5,7 @@ module AOC
     module_function
 
     def max_day_for(year)
-      (Integer(year) >= 2025) ? 12 : 25
+      Integer(year) >= 2025 ? 12 : 25
     end
 
     def normalize_year_day!(year, day)
@@ -16,11 +16,11 @@ module AOC
 
       [year, day]
     rescue ArgumentError
-      raise UserError, "Year and day must be integers."
+      raise UserError, 'Year and day must be integers.'
     end
 
     def validate_year_day!(year, day)
-      raise UserError, "Year must be 2015 or later." if year < 2015
+      raise UserError, 'Year must be 2015 or later.' if year < 2015
 
       max_day = max_day_for(year)
       return if (1..max_day).cover?(day)

@@ -1,29 +1,29 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
+require_relative '../test_helper'
 
 class RendererTest < Minitest::Test
   def test_year_title_prints_header
     output = StringIO.new
     AOC::UI::Renderer.new(output: output, env: {}).year_title(2024)
 
-    assert_includes output.string, "Ruby Advent of Code 2024"
+    assert_includes output.string, 'Ruby Advent of Code 2024'
   end
 
   def test_print_year_results_formats_each_result_and_footer
     output = StringIO.new
     AOC::UI::Renderer.new(output: output, env: {}).print_year_results(
       2024,
-      [AOC::AllResultProtocol::Result.new(day: 2, part: 1, answer: "cba", elapsed: 0.001)]
+      [AOC::AllResultProtocol::Result.new(day: 2, part: 1, answer: 'cba', elapsed: 0.001)]
     )
 
-    assert_includes output.string, "Ruby Advent of Code 2024"
-    assert_includes output.string, "day 02"
-    assert_includes output.string, "part 1"
-    assert_includes output.string, "answer: \"cba\""
+    assert_includes output.string, 'Ruby Advent of Code 2024'
+    assert_includes output.string, 'day 02'
+    assert_includes output.string, 'part 1'
+    assert_includes output.string, 'answer: "cba"'
 
     expected_total = AOC::Calendar.max_day_for(2024) * 2
-    assert_includes output.string, "1 stars"
+    assert_includes output.string, '1 stars'
     assert_includes output.string, "#{expected_total - 1} missing"
     assert_includes output.string, "#{expected_total} total"
   end
@@ -32,41 +32,41 @@ class RendererTest < Minitest::Test
     output = StringIO.new
     AOC::UI::Renderer.new(output: output, env: {}).real_results(
       [
-        [1, "short", 0.001],
-        [2, "longer answer", 0.002]
+        [1, 'short', 0.001],
+        [2, 'longer answer', 0.002]
       ]
     )
 
-    short_line = output.string.lines.find { |line| line.include?("part 1") }
-    long_line = output.string.lines.find { |line| line.include?("part 2") }
+    short_line = output.string.lines.find { |line| line.include?('part 1') }
+    long_line = output.string.lines.find { |line| line.include?('part 2') }
 
-    short_answer_column = short_line.index("\"short\"")
-    long_answer_column = long_line.index("\"longer answer\"")
+    short_answer_column = short_line.index('"short"')
+    long_answer_column = long_line.index('"longer answer"')
 
     assert_equal short_answer_column, long_answer_column,
-      "answers should be left-aligned to the same column"
+                 'answers should be left-aligned to the same column'
   end
 
   def test_example_ok_shows_actual_value
     output = StringIO.new
-    AOC::UI::Renderer.new(output: output, env: {}).example_ok("example 1", 1, 42)
+    AOC::UI::Renderer.new(output: output, env: {}).example_ok('example 1', 1, 42)
 
-    assert_includes output.string, "example 1"
-    assert_includes output.string, "expected = got = 42"
+    assert_includes output.string, 'example 1'
+    assert_includes output.string, 'expected = got = 42'
   end
 
   def test_example_fail_prints_expected_and_actual_and_stop_message
     output = StringIO.new
-    AOC::UI::Renderer.new(output: output, env: {}).example_fail("example 1", 1, 99, 3)
+    AOC::UI::Renderer.new(output: output, env: {}).example_fail('example 1', 1, 99, 3)
 
-    assert_includes output.string, "expected: 99"
-    assert_includes output.string, "got: 3"
-    assert_includes output.string, "Stopped before real input."
+    assert_includes output.string, 'expected: 99'
+    assert_includes output.string, 'got: 3'
+    assert_includes output.string, 'Stopped before real input.'
   end
 
   def test_print_overview_renders_grid_and_footer
     output = StringIO.new
-    env = {"AOC_ASCII" => "1", "NO_COLOR" => "1"}
+    env = { 'AOC_ASCII' => '1', 'NO_COLOR' => '1' }
     AOC::UI::Renderer.new(output: output, env: env).print_overview(
       [
         [2015, [true, true, false]],
@@ -74,24 +74,24 @@ class RendererTest < Minitest::Test
       ]
     )
 
-    assert_includes output.string, "Ruby Advent of Code"
-    assert_includes output.string, "2015"
-    assert_includes output.string, "2016"
-    assert_includes output.string, "2 stars"
-    assert_includes output.string, "4 missing"
-    assert_includes output.string, "6 total"
+    assert_includes output.string, 'Ruby Advent of Code'
+    assert_includes output.string, '2015'
+    assert_includes output.string, '2016'
+    assert_includes output.string, '2 stars'
+    assert_includes output.string, '4 missing'
+    assert_includes output.string, '6 total'
   end
 
   def test_print_overview_supports_multiple_rows
     output = StringIO.new
-    env = {"AOC_ASCII" => "1", "NO_COLOR" => "1"}
+    env = { 'AOC_ASCII' => '1', 'NO_COLOR' => '1' }
     overview = (2015..2019).map { |year| [year, Array.new(2, false)] }
 
     AOC::UI::Renderer.new(output: output, env: env).print_overview(overview)
 
     # First row of cards renders together, then a blank, then the second row.
     assert_match(/2015.*2016.*2017.*2018/m, output.string)
-    assert_includes output.string, "2019"
+    assert_includes output.string, '2019'
   end
 
   def test_print_overview_aligns_cards_with_heterogeneous_heights
@@ -100,7 +100,7 @@ class RendererTest < Minitest::Test
     # shorter card's missing lines must pad with blanks so the next row stays
     # aligned.
     output = StringIO.new
-    env = {"AOC_ASCII" => "1", "NO_COLOR" => "1"}
+    env = { 'AOC_ASCII' => '1', 'NO_COLOR' => '1' }
     overview = [
       [2024, Array.new(25, true)],
       [2025, Array.new(12, true)]
@@ -108,14 +108,14 @@ class RendererTest < Minitest::Test
 
     AOC::UI::Renderer.new(output: output, env: env).print_overview(overview)
 
-    assert_includes output.string, "2024"
-    assert_includes output.string, "2025"
-    assert_includes output.string, "37 stars"
-    assert_includes output.string, "0 missing"
+    assert_includes output.string, '2024'
+    assert_includes output.string, '2025'
+    assert_includes output.string, '37 stars'
+    assert_includes output.string, '0 missing'
 
     # Each row of the grid is the same length (left card padded by line for
     # the right card's extra row).
-    grid_lines = output.string.lines.grep(/\d/).reject { |l| l.include?("stars") }
+    grid_lines = output.string.lines.grep(/\d/).reject { |l| l.include?('stars') }
     refute_empty grid_lines
   end
 
@@ -126,25 +126,25 @@ class RendererTest < Minitest::Test
     AOC::UI::Renderer.new(output: output, env: {}).print_backtrace(exception)
 
     assert_equal AOC::UI::Renderer::MAX_BACKTRACE_LINES, output.string.lines.length
-    assert_includes output.string, "line 1"
-    assert_includes output.string, "line 5"
-    refute_includes output.string, "line 6"
+    assert_includes output.string, 'line 1'
+    assert_includes output.string, 'line 5'
+    refute_includes output.string, 'line 6'
   end
 
   def test_print_backtrace_prints_full_when_debug_enabled
     output = StringIO.new
     exception = build_exception_with_backtrace(10)
 
-    AOC::UI::Renderer.new(output: output, env: {"AOC_DEBUG" => "1"}).print_backtrace(exception)
+    AOC::UI::Renderer.new(output: output, env: { 'AOC_DEBUG' => '1' }).print_backtrace(exception)
 
     assert_equal 10, output.string.lines.length
-    assert_includes output.string, "line 10"
+    assert_includes output.string, 'line 10'
   end
 
   private
 
   def build_exception_with_backtrace(size)
-    StandardError.new("boom").tap do |e|
+    StandardError.new('boom').tap do |e|
       e.set_backtrace((1..size).map { |i| "line #{i}" })
     end
   end

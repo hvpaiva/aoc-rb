@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative 'test_helper'
 
 class SolutionStatusTest < Minitest::Test
   def test_detects_implemented_and_placeholder_parts
@@ -37,7 +37,7 @@ class SolutionStatusTest < Minitest::Test
     RUBY
 
     assert AOC::SolutionStatus.part_complete?(source, 1),
-      "a method whose body merely contains the placeholder string is still considered implemented"
+           'a method whose body merely contains the placeholder string is still considered implemented'
   end
 
   def test_non_runtime_error_placeholder_is_still_complete
@@ -48,7 +48,7 @@ class SolutionStatusTest < Minitest::Test
     RUBY
 
     assert AOC::SolutionStatus.part_complete?(source, 1),
-      "only the exact Scaffolder placeholder counts as incomplete"
+           'only the exact Scaffolder placeholder counts as incomplete'
   end
 
   def test_helper_methods_do_not_confuse_detection
@@ -69,7 +69,7 @@ class SolutionStatusTest < Minitest::Test
 
   def test_day_stars_reads_file_and_reports_each_part
     Dir.mktmpdir do |dir|
-      path = Pathname(dir).join("02.rb")
+      path = Pathname(dir).join('02.rb')
       path.write(<<~RUBY)
         # frozen_string_literal: true
 
@@ -151,7 +151,7 @@ class SolutionStatusTest < Minitest::Test
 
   def test_year_stars_uses_day_stars_for_existing_days
     Dir.mktmpdir do |dir|
-      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, 'config'))
       FileUtils.mkdir_p(paths.day_path(2024, 5).dirname)
       paths.day_path(2024, 5).write("def part1 = 1\n")
 

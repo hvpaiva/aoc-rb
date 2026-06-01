@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative 'test_helper'
 
 class InputStoreTest < Minitest::Test
   include RunnerTestSupport
@@ -8,11 +8,11 @@ class InputStoreTest < Minitest::Test
   def test_reads_cached_input_without_downloading
     Dir.mktmpdir do |dir|
       root = Pathname(dir)
-      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      paths = AOC::Paths.new(root: root, config_dir: root.join('config'))
       write_file(paths.input_path(2024, 2), "cached\n")
       downloader = Object.new
       downloader.define_singleton_method(:download) do |*_args|
-        raise "download should not be called"
+        raise 'download should not be called'
       end
 
       assert_equal "cached\n", AOC::InputStore.new(paths: paths, downloader: downloader).read(2024, 2)
@@ -22,7 +22,7 @@ class InputStoreTest < Minitest::Test
   def test_downloads_missing_input
     Dir.mktmpdir do |dir|
       root = Pathname(dir)
-      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      paths = AOC::Paths.new(root: root, config_dir: root.join('config'))
       calls = []
       downloader = Object.new
       downloader.define_singleton_method(:download) do |*args|

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "fileutils"
+require 'fileutils'
 
 module AOC
   # Generates a new day file from {TEMPLATE}. Refuses to overwrite an
@@ -8,10 +8,8 @@ module AOC
   # With a slug it writes a variant sibling (`YYYY/NN_<slug>.rb`) instead of
   # the canonical file, using the same template.
   class Scaffolder
-    # Variant slugs are restricted to lowercase alphanumerics. `base` is
-    # reserved because the canonical file is conceptually the base variant.
     SLUG_PATTERN = /\A[a-z0-9]+\z/
-    RESERVED_SLUG = "base"
+    RESERVED_SLUG = 'base'
 
     TEMPLATE = <<~RUBY
       # frozen_string_literal: true

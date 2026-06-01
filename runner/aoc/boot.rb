@@ -3,7 +3,13 @@
 module AOC
   module Boot
     class << self
-      def install!(program_name: $PROGRAM_NAME, env: ENV, at_exit_handler: Kernel.method(:at_exit), runner_factory: Runner.method(:new), failure: -> { $! })
+      def install!(
+        program_name: $PROGRAM_NAME,
+        env: ENV,
+        at_exit_handler: Kernel.method(:at_exit),
+        runner_factory: Runner.method(:new),
+        failure: -> { $! }
+      )
         install_dsl
         install_auto_runner(
           program_name: program_name,
@@ -37,7 +43,7 @@ module AOC
           next if failure.call
 
           runner = runner_factory.call
-          (env["AOC_RUN_MODE"] == "all") ? runner.run_all_day! : runner.run!
+          env['AOC_RUN_MODE'] == 'all' ? runner.run_all_day! : runner.run!
         end
       end
     end
