@@ -54,15 +54,21 @@ module RunnerTestSupport
   end
 
   # Stand-in for AOC::Paths used by Runner. Returns the configured year/day
-  # for any path passed to `infer_year_day`.
+  # for any path passed to `infer_year_day`, and a fixed variant slug (nil by
+  # default, i.e. canonical) from `infer_variant`.
   class FakePaths
-    def initialize(year:, day:)
+    def initialize(year:, day:, variant: nil)
       @year = year
       @day = day
+      @variant = variant
     end
 
     def infer_year_day(_path)
       [@year, @day]
+    end
+
+    def infer_variant(_path)
+      @variant
     end
   end
 

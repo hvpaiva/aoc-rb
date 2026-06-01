@@ -12,6 +12,9 @@ class CommandsTest < Minitest::Test
     assert_includes stdout, "rake all"
     assert_includes stdout, "rake 'all[2024]'"
     assert_includes stdout, "ruby 2024/02.rb"
+    assert_includes stdout, "rake 'new[2024,2,bitset]'"
+    assert_includes stdout, "rake 'all[2024,2]'"
+    assert_includes stdout, "ruby 2024/02_bitset.rb"
   end
 
   def test_all_without_year_uses_overview_not_year_runner
@@ -36,6 +39,113 @@ class CommandsTest < Minitest::Test
       end
 
       assert_equal "No days found for 2024.", error.message
+    end
+  end
+
+  def test_all_with_year_and_day_dispatches_to_comparison
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+
+      error = assert_raises(AOC::UserError) do
+        AOC::Commands.all(2024, 2, paths: paths)
+      end
+
+      assert_includes error.message, "No files found for 2024 day 02"
+    end
+  end
+
+  def test_run_day_focuses_variant_file
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+      write_file(paths.variant_path(2024, 2, "bitset"), "# frozen_string_literal: true\n")
+      commands = []
+      command_runner = lambda do |*command|
+        commands << command
+        true
+      end
+
+      AOC::Commands.run_day(2024, 2, variant: "bitset", paths: paths, command_runner: command_runner)
+
+      assert_equal paths.variant_path(2024, 2, "bitset").to_s, commands.first.last
+    end
+  end
+
+  def test_run_day_reports_missing_variant_with_slug_hint
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+
+      error = assert_raises(AOC::UserError) do
+        AOC::Commands.run_day(2024, 2, variant: "bitset", paths: paths)
+      end
+
+      assert_equal "File not found: 2024/02_bitset.rb. Create it with: rake 'new[2024,2,bitset]'", error.message
+    end
+  end
+
+  def test_new_day_with_slug_creates_variant
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+
+      AOC::Commands.new_day(2024, 2, "bitset", paths: paths, output: StringIO.new, error: StringIO.new)
+
+      assert paths.variant_path(2024, 2, "bitset").exist?
+      refute paths.day_path(2024, 2).exist?, "variant creation must not touch the canonical file"
+    end
+  end
+
+  def test_check_includes_variant_files
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+      write_file(paths.day_path(2024, 2), "# frozen_string_literal: true\n")
+      write_file(paths.variant_path(2024, 2, "bitset"), "# frozen_string_literal: true\n")
+
+      names = AOC::Commands.check_files(paths).map { |path| path.basename.to_s }
+
+      assert_includes names, "02.rb"
+      assert_includes names, "02_bitset.rb"
+    end
+  end
+
+  def test_run_all_day_capturing_marks_failure_without_raising
+    status = Object.new
+    status.define_singleton_method(:success?) { false }
+    marker = AOC::AllResultProtocol::MARKER
+    process_runner = ->(*_command) { ["#{marker}{\"day\":2,\"part\":1,\"answer\":\"x\",\"elapsed\":0.1}\n", "boom\n", status] }
+
+    results, ok = AOC::Commands.run_all_day_capturing("2024/02_bad.rb", process_runner: process_runner)
+
+    refute ok, "a non-zero subprocess must be reported as not ok"
+    assert_equal 1, results.length, "results emitted before the failure are kept"
+  end
+
+  def test_run_day_comparison_tolerates_a_failing_variant
+    with_project do |root|
+      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      write_file(root.join("inputs", "2024", "02.txt"), "abc\n")
+      write_file(root.join("2024", "02.rb"), <<~RUBY)
+        # frozen_string_literal: true
+
+        require_relative "../runner/aoc"
+
+        def part1 = input.chomp.length
+      RUBY
+      write_file(root.join("2024", "02_boom.rb"), <<~RUBY)
+        # frozen_string_literal: true
+
+        require_relative "../runner/aoc"
+
+        def part1 = raise "kaboom"
+      RUBY
+
+      stdout, = capture_io do
+        AOC::Commands.run_day_comparison(2024, 2, paths: paths)
+      end
+
+      assert_includes stdout, "Ruby Advent of Code 2024 day 02"
+      assert_includes stdout, "base"
+      assert_includes stdout, "boom"
+      assert_includes stdout, "errored"
+      assert_includes stdout, 'answer: "3"'
     end
   end
 

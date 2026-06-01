@@ -213,6 +213,65 @@ class SnapshotsTest < Minitest::Test
     OUT
   end
 
+  def test_ascii_day_comparison_without_divergence
+    output = StringIO.new
+    result = ->(part, answer, elapsed) { AOC::AllResultProtocol::Result.new(day: 6, part: part, answer: answer, elapsed: elapsed) }
+    variants = [
+      ["base", [result.call(1, "543903", 0.0123), result.call(2, "1060", 0.015)], true],
+      ["bitset", [result.call(1, "543903", 0.004), result.call(2, "1060", 0.005)], true]
+    ]
+
+    AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR).print_day_comparison(2015, 6, variants)
+
+    assert_equal <<~OUT, output.string
+       Ruby Advent of Code 2015 day 06
+
+      * base   · part 1 · answer: "543903"  (12.3ms)
+      * base   · part 2 · answer: "1060"    (15.0ms)
+      * bitset · part 1 · answer: "543903"  (4.00ms)
+      * bitset · part 2 · answer: "1060"    (5.00ms)
+    OUT
+  end
+
+  def test_ascii_day_comparison_with_divergence_and_failures
+    output = StringIO.new
+    result = ->(answer, elapsed) { AOC::AllResultProtocol::Result.new(day: 6, part: 1, answer: answer, elapsed: elapsed) }
+    variants = [
+      ["base", [result.call("543903", 0.0123)], true],
+      ["wrong", [result.call("999", 0.004)], true],
+      ["boom", [], false],
+      ["empty", [], true]
+    ]
+
+    AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR).print_day_comparison(2015, 6, variants)
+
+    assert_equal <<~OUT, output.string
+       Ruby Advent of Code 2015 day 06
+
+      ! base  · part 1 · answer: "543903"  (12.3ms)
+      ! wrong · part 1 · answer: "999"     (4.00ms)
+      x boom  · errored (run it directly for the trace)
+      > empty · no parts implemented
+
+      Variants disagree on part 1.
+    OUT
+  end
+
+  def test_ascii_day_comparison_marks_partial_failure_after_its_results
+    output = StringIO.new
+    partial = AOC::AllResultProtocol::Result.new(day: 6, part: 1, answer: "543903", elapsed: 0.0123)
+    variants = [["base", [partial], false]]
+
+    AOC::UI::Renderer.new(output: output, env: ASCII_NO_COLOR).print_day_comparison(2015, 6, variants)
+
+    assert_equal <<~OUT, output.string
+       Ruby Advent of Code 2015 day 06
+
+      * base · part 1 · answer: "543903"  (12.3ms)
+      x base · errored (run it directly for the trace)
+    OUT
+  end
+
   # ------------------------------------------------------------------ Unicode
 
   def test_unicode_human_run_uses_emoji_icons
@@ -300,14 +359,18 @@ class SnapshotsTest < Minitest::Test
 
     assert_equal <<~OUT, stdout
       Usage:
-        rake 'new[2024,2]'  # create 2024/02.rb
-        rake 2024:02        # run 2024/02.rb
-        rake all            # show global progress
-        rake 'all[2024]'    # run real inputs for a year
-        rake check          # validate Ruby syntax, style, and tests
+        rake 'new[2024,2]'         # create 2024/02.rb
+        rake 'new[2024,2,bitset]'  # create the 2024/02_bitset.rb variant
+        rake 2024:02               # run 2024/02.rb
+        rake '2024:02[bitset]'     # run the 2024/02_bitset.rb variant
+        rake all                   # show global progress
+        rake 'all[2024]'           # run real inputs for a year
+        rake 'all[2024,2]'         # compare a day's variants on real input
+        rake check                 # validate Ruby syntax, style, and tests
 
       Direct execution also works:
         ruby 2024/02.rb
+        ruby 2024/02_bitset.rb
     OUT
   end
 

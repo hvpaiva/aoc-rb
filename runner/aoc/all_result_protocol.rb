@@ -11,7 +11,13 @@ module AOC
   module AllResultProtocol
     MARKER = "AOC_ALL_RESULT "
 
-    Result = Data.define(:day, :part, :answer, :elapsed)
+    # `variant` is the slug of the originating file, or nil for the canonical
+    # day file. It defaults to nil so the year-run path (canonical files only)
+    # and existing callers keep constructing results without naming it; the
+    # comparison path sets it from {Paths#infer_variant}.
+    Result = Data.define(:day, :part, :answer, :elapsed, :variant) do
+      def initialize(variant: nil, **rest) = super(**rest, variant: variant)
+    end
 
     module_function
 

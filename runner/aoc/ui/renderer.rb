@@ -131,6 +131,26 @@ module AOC
         print_all_footer(results.length, missing, total)
       end
 
+      # Comparison table for `rake 'all[YYYY,DD]'`. Mirrors the year table
+      # (one star line per row), swapping the day column for a variant label.
+      # Lines for a part whose answer differs across variants are flagged, and
+      # a variant whose subprocess failed is marked as errored.
+      #
+      # @param variants [Array(String, Array<AllResultProtocol::Result>, Boolean)]
+      #   `[label, results, ok]` per file, canonical (`"base"`) first.
+      def print_day_comparison(year, day, variants)
+        title(year, day)
+        puts
+
+        label_width = variants.map { |label, _results, _ok| label.length }.max || 0
+        answer_width = variants.flat_map { |_label, results, _ok| results.map { |r| value(r.answer).length } }.max || 0
+        diverging = comparison_diverging_parts(variants)
+
+        variants.each { |variant| print_comparison_variant(variant, label_width, answer_width, diverging) }
+
+        print_comparison_footer(diverging)
+      end
+
       def print_overview(overview)
         overview_title
         print_overview_grid(overview)
@@ -155,6 +175,57 @@ module AOC
         part_label = part_title(result.part)
         answer = value(result.answer).ljust(answer_width)
         puts "#{yellow(icon(:star))} #{day} · #{part_label} · answer: #{answer}  #{elapsed_time(result.elapsed)}"
+      end
+
+      def print_comparison_variant(variant, label_width, answer_width, diverging)
+        label, results, ok = variant
+        sorted = results.sort_by(&:part)
+
+        if sorted.empty?
+          puts comparison_status_line(label, label_width, ok)
+          return
+        end
+
+        sorted.each do |result|
+          puts comparison_result_line(label, label_width, result, answer_width, diverging.include?(result.part))
+        end
+
+        puts comparison_status_line(label, label_width, ok) unless ok
+      end
+
+      def comparison_result_line(label, label_width, result, answer_width, diverging)
+        marker = diverging ? red(icon(:fail)) : yellow(icon(:star))
+        name = blue(label.ljust(label_width))
+        answer = value(result.answer).ljust(answer_width)
+
+        "#{marker} #{name} · #{part_title(result.part)} · answer: #{answer}  #{elapsed_time(result.elapsed)}"
+      end
+
+      def comparison_status_line(label, label_width, ok)
+        name = blue(label.ljust(label_width))
+        return "#{yellow(icon(:skip))} #{name} · #{dim("no parts implemented")}" if ok
+
+        "#{red(icon(:boom))} #{name} · #{red("errored (run it directly for the trace)")}"
+      end
+
+      def comparison_diverging_parts(variants)
+        by_part = Hash.new { |hash, part| hash[part] = [] }
+
+        variants.each do |_label, results, ok|
+          next unless ok
+
+          results.each { |result| by_part[result.part] << result.answer }
+        end
+
+        by_part.select { |_part, answers| answers.uniq.length > 1 }.keys.sort
+      end
+
+      def print_comparison_footer(diverging)
+        return if diverging.empty?
+
+        puts
+        parts = diverging.map { |part| "part #{part}" }.join(" and ")
+        puts red("Variants disagree on #{parts}.")
       end
 
       def print_all_footer(stars, missing, total)

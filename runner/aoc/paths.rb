@@ -7,7 +7,16 @@ module AOC
   # {Paths.default}.
   class Paths
     DEFAULT_ROOT = Pathname(__dir__).join("..", "..").expand_path.freeze
-    DAY_FILE_PATTERN = %r{(?:^|/)(20\d{2})/(\d{2})\.rb\z}
+    # Recognition pattern: matches an executable day file. The optional
+    # `[_-]<slug>` suffix admits variant siblings (e.g. `06_bitset.rb`) while
+    # still capturing the canonical two-digit day, so a variant resolves to the
+    # same year/day (and shares the canonical input). This loosens RECOGNITION
+    # only; COUNTING toward stars stays governed by the strict glob in
+    # {#day_files}. See ARCHITECTURE.md ("Variants and the recognition seam").
+    DAY_FILE_PATTERN = %r{(?:^|/)(20\d{2})/(\d{2})(?:[_-][^/]*)?\.rb\z}
+
+    # Captures the slug of a variant day file, or nil for the canonical file.
+    VARIANT_PATTERN = %r{(?:^|/)20\d{2}/\d{2}[_-]([^/]*)\.rb\z}
 
     # @return [Pathname] project root, where day files and `inputs/` live.
     attr_reader :root
@@ -67,9 +76,19 @@ module AOC
 
     # @param year [Integer, String]
     # @param day [Integer, String]
-    # @return [Pathname] absolute path to the cached input file.
+    # @return [Pathname] absolute path to the cached input file. Variants share
+    #   the canonical input, so there is no per-variant variant of this path.
     def input_path(year, day)
       inputs_dir.join(year.to_s, "#{format("%02d", Integer(day))}.txt")
+    end
+
+    # @param year [Integer, String]
+    # @param day [Integer, String]
+    # @param slug [String] variant slug (already validated by the caller).
+    # @return [Pathname] absolute path to a variant day source file
+    #   (`YYYY/NN_<slug>.rb`).
+    def variant_path(year, day, slug)
+      root.join(year.to_s, "#{format("%02d", Integer(day))}_#{slug}.rb")
     end
 
     # @param year [Integer]
@@ -77,6 +96,32 @@ module AOC
     #   given year.
     def day_files(year)
       Pathname.glob(root.join(year.to_s, "[0-9][0-9].rb")).sort_by(&:to_s)
+    end
+
+    # All executable files for a single day: the canonical file first (when it
+    # exists), then variant siblings sorted by name. This is the basis of the
+    # comparison mode and is intentionally distinct from {#day_files}, which
+    # stays strict for star counting.
+    #
+    # @param year [Integer, String]
+    # @param day [Integer, String]
+    # @return [Array<Pathname>] existing day files for this day.
+    def day_variants(year, day)
+      nn = format("%02d", Integer(day))
+      canonical = root.join(year.to_s, "#{nn}.rb")
+      variants = Pathname.glob(root.join(year.to_s, "#{nn}[_-]*.rb")).sort_by(&:to_s)
+
+      files = []
+      files << canonical if canonical.exist?
+      files.concat(variants)
+      files
+    end
+
+    # @param path [String, Pathname]
+    # @return [String, nil] the variant slug, or nil when the path is canonical.
+    def infer_variant(path)
+      match = Pathname(path).to_s.tr("\\", "/").match(VARIANT_PATTERN)
+      match && match[1]
     end
 
     # @param path [String, Pathname]

@@ -10,12 +10,12 @@ task :help do
   run_aoc { AOC::Commands.help }
 end
 
-task :new, [:year, :day] do |_task, args|
-  run_aoc { AOC::Commands.new_day(*require_year_day!(args)) }
+task :new, [:year, :day, :variant] do |_task, args|
+  run_aoc { AOC::Commands.new_day(*require_year_day!(args), args[:variant]) }
 end
 
-task :all, [:year] do |_task, args|
-  run_aoc { AOC::Commands.all(args[:year]) }
+task :all, [:year, :day] do |_task, args|
+  run_aoc { AOC::Commands.all(args[:year], args[:day]) }
 end
 
 task :check do
@@ -29,8 +29,8 @@ end
 (2015..Date.today.year).each do |year|
   namespace year.to_s.to_sym do
     (1..AOC::Calendar.max_day_for(year)).each do |day|
-      task format("%02d", day).to_sym do
-        run_aoc { AOC::Commands.run_day(year, day) }
+      task format("%02d", day).to_sym, [:variant] do |_task, args|
+        run_aoc { AOC::Commands.run_day(year, day, variant: args[:variant]) }
       end
     end
   end

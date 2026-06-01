@@ -67,6 +67,7 @@ module AOC
     # @return [void]
     def run_all_day!(path: $PROGRAM_NAME)
       year, day = @paths.infer_year_day(path)
+      variant = @paths.infer_variant(path)
       real_input = @input_store.read(year, day)
 
       SolutionStatus.available_parts.each do |part|
@@ -76,7 +77,7 @@ module AOC
 
         AllResultProtocol.emit(
           @output,
-          AllResultProtocol::Result.new(day: day, part: part, answer: answer.to_s, elapsed: elapsed)
+          AllResultProtocol::Result.new(day: day, part: part, answer: answer.to_s, elapsed: elapsed, variant: variant)
         )
       end
     rescue SystemExit

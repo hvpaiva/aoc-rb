@@ -60,6 +60,21 @@ class BootTest < Minitest::Test
     assert_equal [:run_all_day], calls
   end
 
+  def test_install_registers_auto_runner_for_variant_day_file
+    handlers = []
+    at_exit_handler = ->(&block) { handlers << block }
+    runner_factory = -> { Object.new.tap { |r| r.define_singleton_method(:run!) { nil } } }
+
+    AOC::Boot.install!(
+      program_name: "2024/02_bitset.rb",
+      at_exit_handler: at_exit_handler,
+      runner_factory: runner_factory,
+      failure: -> {}
+    )
+
+    assert_equal 1, handlers.length, "a variant day file should register the auto-runner"
+  end
+
   def test_install_skips_auto_runner_when_process_is_unwinding
     captured_block = nil
     calls = []

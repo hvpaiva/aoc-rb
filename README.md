@@ -46,6 +46,14 @@ rake 'new[2024,2]'
 
 Scaffolding supports 25 days for years through 2024 and 12 days for 2025 onward.
 
+To scaffold an alternative solution (a *variant*) for the same day, pass a slug:
+
+```sh
+rake 'new[2024,2,bitset]'   # creates 2024/02_bitset.rb
+```
+
+Variants are sibling files (`2024/02_bitset.rb` beside `2024/02.rb`) that share the canonical input. They are runnable, creatable, and linted, but never count toward stars or `rake 'all[YYYY]'`. Slugs match `/\A[a-z0-9]+\z/`; `base` is reserved.
+
 ## Run a day
 
 ```sh
@@ -58,11 +66,26 @@ Or:
 rake 2024:02
 ```
 
+To run a variant instead of the canonical file:
+
+```sh
+ruby 2024/02_bitset.rb
+rake '2024:02[bitset]'
+```
+
 ## Run all existing days for a year
 
 ```sh
 rake 'all[2024]'
 ```
+
+## Compare a day's variants
+
+```sh
+rake 'all[2024,2]'
+```
+
+Runs the canonical file and every variant of day 2 against the real input only (no examples) and prints a per-variant table with per-part timing. Answers that disagree across variants are flagged, and a variant that fails is marked without aborting its siblings. With no variants present, this is a one-row table — a quick way to time the real input without examples.
 
 ## Progress overview
 

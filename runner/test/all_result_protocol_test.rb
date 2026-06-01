@@ -63,4 +63,25 @@ class AllResultProtocolTest < Minitest::Test
 
     assert_raises(NoMethodError) { result.day = 2 }
   end
+
+  def test_variant_defaults_to_nil_when_unspecified
+    result = AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "x", elapsed: 0.1)
+
+    assert_nil result.variant
+  end
+
+  def test_variant_roundtrips_through_emit_and_parse
+    io = StringIO.new
+    original = [
+      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "a", elapsed: 0.1, variant: nil),
+      AOC::AllResultProtocol::Result.new(day: 1, part: 1, answer: "a", elapsed: 0.1, variant: "bitset")
+    ]
+    original.each { |result| AOC::AllResultProtocol.emit(io, result) }
+
+    parsed = AOC::AllResultProtocol.parse(io.string)
+
+    assert_equal original, parsed
+    assert_nil parsed[0].variant
+    assert_equal "bitset", parsed[1].variant
+  end
 end

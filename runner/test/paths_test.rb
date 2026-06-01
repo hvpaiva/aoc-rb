@@ -34,6 +34,80 @@ class PathsTest < Minitest::Test
     refute AOC::Paths.day_file?("2024/2.rb"), "non-zero-padded names should be rejected"
   end
 
+  def test_recognizes_variant_files_as_executable_day_files
+    assert AOC::Paths.day_file?("2024/02_alt.rb"), "underscore variant should be executable"
+    assert AOC::Paths.day_file?("2024/02-brute.rb"), "dash variant should be executable"
+    refute AOC::Paths.day_file?("2024/021.rb"), "a third digit is not a variant separator"
+  end
+
+  def test_infers_year_day_from_variant_path
+    paths = AOC::Paths.new(root: PROJECT_ROOT)
+
+    assert_equal [2024, 2], paths.infer_year_day("/tmp/aoc/2024/02_bitset.rb")
+    assert_equal [2024, 2], paths.infer_year_day("/tmp/aoc/2024/02-brute.rb")
+  end
+
+  def test_variant_path_builds_zero_padded_sibling
+    paths = AOC::Paths.new(root: "/tmp/aoc")
+
+    assert_equal Pathname("/tmp/aoc/2024/02_bitset.rb"), paths.variant_path(2024, 2, "bitset")
+  end
+
+  def test_infer_variant_returns_slug_or_nil
+    paths = AOC::Paths.new(root: PROJECT_ROOT)
+
+    assert_nil paths.infer_variant("2024/02.rb")
+    assert_equal "bitset", paths.infer_variant("2024/02_bitset.rb")
+    assert_equal "brute", paths.infer_variant("2024/02-brute.rb")
+  end
+
+  def test_day_variants_lists_canonical_first_then_sorted_variants
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      %w[02.rb 02_bitset.rb 02-brute.rb 02_alt.rb].each do |name|
+        path = root.join("2024", name)
+        path.dirname.mkpath
+        path.write("")
+      end
+
+      variants = paths.day_variants(2024, 2).map { |path| path.basename.to_s }
+
+      assert_equal "02.rb", variants.first, "canonical must come first"
+      assert_equal ["02-brute.rb", "02_alt.rb", "02_bitset.rb"], variants.drop(1)
+    end
+  end
+
+  def test_day_variants_omits_missing_canonical
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      path = root.join("2024", "02_only.rb")
+      path.dirname.mkpath
+      path.write("")
+
+      variants = paths.day_variants(2024, 2).map { |p| p.basename.to_s }
+
+      assert_equal ["02_only.rb"], variants
+    end
+  end
+
+  def test_day_files_stays_strict_and_excludes_variants
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      %w[02.rb 02_bitset.rb 03.rb].each do |name|
+        path = root.join("2024", name)
+        path.dirname.mkpath
+        path.write("")
+      end
+
+      files = paths.day_files(2024).map { |path| path.basename.to_s }
+
+      assert_equal ["02.rb", "03.rb"], files, "day_files must not pick up variants"
+    end
+  end
+
   def test_infer_year_day_rejects_non_day_files
     paths = AOC::Paths.new(root: PROJECT_ROOT)
 

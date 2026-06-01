@@ -10,7 +10,7 @@ runner/
   aoc/
     errors.rb                 # AOC::Error, UserError, CommandFailed taxonomy.
     calendar.rb               # max_day_for(year) and year/day validation.
-    paths.rb                  # Path geometry: root, day_path, input_path, cache_dir, day_files.
+    paths.rb                  # Path geometry: root, day_path, input_path, cache_dir, day_files, variants.
     config.rb                 # AOC_SESSION, AOC_USER_AGENT, AOC_MIN_INTERVAL_SECONDS resolution.
     downloader.rb             # HTTP fetch of input files with throttle + cache stamp.
     input_store.rb            # read(year, day): from cache, else delegate to downloader.
@@ -22,8 +22,8 @@ runner/
     solution_status.rb        # Detect which parts are implemented (Prism-based for source paths).
     scaffolder.rb             # Generates day files from a template.
     runner.rb                 # Solves parts: examples + real input, or all-mode JSON emission.
-    all_result_protocol.rb    # MARKER + Data.define Result + emit/parse for AOC_RUN_MODE=all.
-    commands.rb               # Public Rake-facing commands: help, new_day, run_day, all, check, test.
+    all_result_protocol.rb    # MARKER + Data.define Result (incl. variant) + emit/parse for AOC_RUN_MODE=all.
+    commands.rb               # Public Rake-facing commands: help, new_day, run_day, all, run_day_comparison, check, test.
     boot.rb                   # Installs DSL and registers the at_exit auto-runner for day files.
   test/
     test_helper.rb            # Loads aoc.rb and support/fakes.rb. Defines RunnerTestSupport helpers.
@@ -57,6 +57,25 @@ INPUT
 `require_relative "../runner/aoc"` loads the runner and registers an `at_exit` hook. The day file then defines `part1`/`part2` at the top level and declares one or more `example` calls. After the script body finishes, the `at_exit` hook runs the solver against the examples and then the real input.
 
 The file shape is the runner's public contract. Internals can change freely; day files cannot.
+
+## Variants and the recognition seam
+
+A *variant* is an alternative solution for a day, living in a sibling file next to the canonical one: `2015/06_bitset.rb` beside `2015/06.rb`. Variants are first-class to run, create, and lint, but invisible to stars, the overview, and `rake all[YYYY]`. They share the canonical input (`inputs/2015/06.txt`); there is no per-variant input.
+
+The feature rests on separating two notions of "day file" that otherwise coincide:
+
+- **Recognition** — *is this file executable as a day?* Governed by `Paths::DAY_FILE_PATTERN` and `Paths.day_file?` (the Boot auto-runner gate) plus `Paths#infer_year_day`. The pattern admits an optional `[_-]<slug>` suffix and still captures the two-digit day, so `06_bitset.rb` is recognized and resolves to `[2015, 6]`. This is the part the feature **loosens**.
+- **Counting** — *does this file earn a star / enter `all[YYYY]`?* Governed by the strict `[0-9][0-9].rb` glob in `Paths#day_files` (consumed by `Commands.run_year`) and the canonical `day_path` in `SolutionStatus.year_stars`. This part is **never** loosened: variants do not match the strict glob, so they stay out of star counting and year aggregation. `rake check` adds a separate variant glob so variants are still syntax- and style-checked.
+
+Helpers built on recognition: `Paths#variant_path`, `Paths#day_variants` (canonical first, then sorted variants — the basis of comparison mode), and `Paths#infer_variant` (slug or nil).
+
+Slugs are created as `NN_<slug>.rb` with `slug` matching `/\A[a-z0-9]+\z/`; `base` is reserved (the canonical file is the base). Recognition is more lenient than creation: it also tolerates a `-` separator for files authored by hand.
+
+### Comparison mode: `rake 'all[YYYY,DD]'`
+
+`Commands.all` progresses by arity: no args → overview; one arg → year; two args → `run_day_comparison`. Comparison runs the canonical file and every variant of one day against the **real input only** (no examples), in `AOC_RUN_MODE=all` subprocesses, and renders a per-variant table (one star line per row, mirroring the year table but with a variant-label column). It flags any part whose answer differs across variants.
+
+Comparison is the one aggregation path that must **tolerate a failing file**: `run_day_comparison` uses `run_all_day_capturing`, which returns `[results, ok]` instead of raising on a non-zero subprocess (unlike `run_all_day`, used by `run_year`, which raises `CommandFailed` on the first failure). A failing variant is marked errored and its siblings still run. Comparison is a Rake-only concept; `ruby <file>` is always a focused single-file run.
 
 ## Object pollution (intentional trade-off)
 
@@ -107,10 +126,10 @@ Used by `rake all[YYYY]`. The parent (`Commands.run_year`) spawns one Ruby subpr
 Each child emits via `AllResultProtocol.emit(@output, Result.new(...))`:
 
 ```
-AOC_ALL_RESULT {"day":2,"part":1,"answer":"cba","elapsed":0.125}
+AOC_ALL_RESULT {"day":2,"part":1,"answer":"cba","elapsed":0.125,"variant":null}
 ```
 
-The parent calls `AllResultProtocol.parse(stdout)` to recover an array of `Result` Data objects, then renders them via `Renderer#print_year_results`. The `answer` field carries the raw string (`answer.to_s`); display formatting (`inspect`, truncation) happens at render time, not in the protocol.
+`variant` carries the originating file's slug (or null for the canonical file); it defaults to nil so the year-run path and existing callers ignore it, while comparison mode keys its table on it. The parent calls `AllResultProtocol.parse(stdout)` to recover an array of `Result` Data objects, then renders them via `Renderer#print_year_results` (year run) or `Renderer#print_day_comparison` (comparison). The `answer` field carries the raw string (`answer.to_s`); display formatting (`inspect`, truncation) happens at render time, not in the protocol.
 
 The protocol exists only as a child/parent boundary. The user sees the same human-readable style as `run!`, just produced from a different process.
 
