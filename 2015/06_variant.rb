@@ -7,15 +7,15 @@ LINE = /\A(?<action>turn on|toggle|turn off) (?<x1>\d+),(?<y1>\d+) through (?<x2
 Instruction = Data.define(:action, :from_x, :from_y, :to_x, :to_y)
 
 PART1 = {
-  turn_on:  ->(row, ys) { row.fill(1, ys.begin, ys.size) },
+  turn_on: ->(row, ys) { row.fill(1, ys.begin, ys.size) },
   turn_off: ->(row, ys) { row.fill(0, ys.begin, ys.size) },
-  toggle:   ->(row, ys) { ys.each { |y| row[y] ^= 1 } }
+  toggle: ->(row, ys) { ys.each { |y| row[y] ^= 1 } }
 }.freeze
 
 PART2 = {
-  turn_on:  ->(row, ys) { ys.each { |y| row[y] += 1 } },
+  turn_on: ->(row, ys) { ys.each { |y| row[y] += 1 } },
   turn_off: ->(row, ys) { ys.each { |y| row[y] -= 1 if row[y].positive? } },
-  toggle:   ->(row, ys) { ys.each { |y| row[y] += 2 } }
+  toggle: ->(row, ys) { ys.each { |y| row[y] += 2 } }
 }.freeze
 
 def instructions
