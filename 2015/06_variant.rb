@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../runner/aoc"
+require_relative '../runner/aoc'
 
 LINE = /\A(?<action>turn on|toggle|turn off) (?<x1>\d+),(?<y1>\d+) through (?<x2>\d+),(?<y2>\d+)\z/
 
@@ -22,7 +22,7 @@ def instructions
   @instructions ||= input.lines(chomp: true).map do |line|
     m = LINE.match(line) or raise "invalid line: #{line}"
     Instruction.new(
-      action: m[:action].tr(" ", "_").to_sym,
+      action: m[:action].tr(' ', '_').to_sym,
       from_x: m[:x1].to_i, from_y: m[:y1].to_i,
       to_x: m[:x2].to_i, to_y: m[:y2].to_i
     )
