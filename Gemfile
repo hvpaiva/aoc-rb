@@ -7,9 +7,9 @@ ruby '>= 4.0.0'
 gem 'rake', '~> 13.0'
 
 group :development do
-  # RuboCop (+ performance) is the single linter for the whole repo — runner
-  # and solutions alike, same rules. It is a strict quality gate and a study
-  # aid: it surfaces idiom, complexity, and slow-pattern improvements.
+  # RuboCop (+ performance) is the single linter for the whole repo, runner
+  # and solutions alike. It surfaces idiom, complexity, and slow-pattern
+  # improvements.
   gem 'rubocop', require: false
   gem 'rubocop-performance', require: false
 end

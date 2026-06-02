@@ -62,20 +62,20 @@ The file shape is the runner's public contract. Internals can change freely; day
 
 A *variant* is an alternative solution for a day, living in a sibling file next to the canonical one: `2015/06_bitset.rb` beside `2015/06.rb`. Variants are first-class to run, create, and lint, but invisible to stars, the overview, and `rake all[YYYY]`. They share the canonical input (`inputs/2015/06.txt`); there is no per-variant input.
 
-The feature rests on separating two notions of "day file" that otherwise coincide:
+Variants work by keeping two notions of "day file" separate where they would otherwise coincide:
 
-- **Recognition** — *is this file executable as a day?* Governed by `Paths::DAY_FILE_PATTERN` and `Paths.day_file?` (the Boot auto-runner gate) plus `Paths#infer_year_day`. The pattern admits an optional `[_-]<slug>` suffix and still captures the two-digit day, so `06_bitset.rb` is recognized and resolves to `[2015, 6]`. This is the part the feature **loosens**.
-- **Counting** — *does this file earn a star / enter `all[YYYY]`?* Governed by the strict `[0-9][0-9].rb` glob in `Paths#day_files` (consumed by `Commands.run_year`) and the canonical `day_path` in `SolutionStatus.year_stars`. This part is **never** loosened: variants do not match the strict glob, so they stay out of star counting and year aggregation. `rake check` adds a separate variant glob so variants are still syntax- and style-checked.
+- **Recognition**: *is this file executable as a day?* Governed by `Paths::DAY_FILE_PATTERN` and `Paths.day_file?` (the Boot auto-runner gate) plus `Paths#infer_year_day`. The pattern admits an optional `[_-]<slug>` suffix and still captures the two-digit day, so `06_bitset.rb` is recognized and resolves to `[2015, 6]`. Recognition is the lenient notion.
+- **Counting**: *does this file earn a star / enter `all[YYYY]`?* Governed by the strict `[0-9][0-9].rb` glob in `Paths#day_files` (consumed by `Commands.run_year`) and the canonical `day_path` in `SolutionStatus.year_stars`. Counting is the strict notion: variants do not match the strict glob, so they stay out of star counting and year aggregation. `rake check` adds a separate variant glob so variants are still syntax- and style-checked.
 
-Helpers built on recognition: `Paths#variant_path`, `Paths#day_variants` (canonical first, then sorted variants — the basis of comparison mode), and `Paths#infer_variant` (slug or nil).
+Helpers built on recognition: `Paths#variant_path`, `Paths#day_variants` (canonical first, then sorted variants, the basis of comparison mode), and `Paths#infer_variant` (slug or nil).
 
 Slugs are created as `NN_<slug>.rb` with `slug` matching `/\A[a-z0-9]+\z/`; `base` is reserved (the canonical file is the base). Recognition is more lenient than creation: it also tolerates a `-` separator for files authored by hand.
 
 ### Comparison mode: `rake 'all[YYYY,DD]'`
 
-`Commands.all` progresses by arity: no args → overview; one arg → year; two args → `run_day_comparison`. Comparison runs the canonical file and every variant of one day against the **real input only** (no examples), in `AOC_RUN_MODE=all` subprocesses, and renders a per-variant table (one star line per row, mirroring the year table but with a variant-label column). It flags any part whose answer differs across variants.
+`Commands.all` progresses by arity: no args → overview; one arg → year; two args → `run_day_comparison`. Comparison runs the canonical file and every variant of one day against the real input only (no examples), in `AOC_RUN_MODE=all` subprocesses, and renders a per-variant table (one star line per row, mirroring the year table but with a variant-label column). It flags any part whose answer differs across variants.
 
-Comparison is the one aggregation path that must **tolerate a failing file**: `run_day_comparison` uses `run_all_day_capturing`, which returns `[results, ok]` instead of raising on a non-zero subprocess (unlike `run_all_day`, used by `run_year`, which raises `CommandFailed` on the first failure). A failing variant is marked errored and its siblings still run. Comparison is a Rake-only concept; `ruby <file>` is always a focused single-file run.
+Comparison is the one aggregation path that must tolerate a failing file: `run_day_comparison` uses `run_all_day_capturing`, which returns `[results, ok]` instead of raising on a non-zero subprocess (unlike `run_all_day`, used by `run_year`, which raises `CommandFailed` on the first failure). A failing variant is marked errored and its siblings still run. Comparison is a Rake-only concept; `ruby <file>` is always a focused single-file run.
 
 ## Object pollution (intentional trade-off)
 
@@ -88,10 +88,10 @@ This is a Ruby idiom for top-level scripts but normally undesirable as a library
 
 Two mitigations keep the cost manageable:
 
-1. **Overview path uses Prism**, not `Object.method_defined?`. `SolutionStatus.part_complete?` parses the source statically, so `rake all` does not need to load every day file in-process (which would pollute `Object` across all years).
-2. **Solve uses `Object.new`, not the main object**, so `@parsed` memoization does not leak across runs in the same process.
+1. The overview path uses Prism, not `Object.method_defined?`. `SolutionStatus.part_complete?` parses the source statically, so `rake all` does not need to load every day file in-process (which would pollute `Object` across all years).
+2. Solve uses `Object.new`, not the main object, so `@parsed` memoization does not leak across runs in the same process.
 
-Tests work around `Object` pollution by removing `part1`/`part2` in `teardown`. This is not pretty; it is the trade-off cost.
+Tests work around `Object` pollution by removing `part1`/`part2` in `teardown`.
 
 ## Boot lifecycle
 
@@ -166,10 +166,10 @@ end
 `Downloader#download(year, day)` orchestrates:
 
 1. Pull `session` and `user_agent` via `Config#session!` / `Config#user_agent!` (raise `UserError` if missing).
-2. `throttle!` enforces `AOC_MIN_INTERVAL_SECONDS` (default 300) between requests. The cache stamp is written **before** the request: a failed request still counts against the rate limit, to be polite to adventofcode.com.
+2. `throttle!` enforces `AOC_MIN_INTERVAL_SECONDS` (default 300) between requests. The cache stamp is written before the request: a failed request still counts against the rate limit, to be polite to adventofcode.com.
 3. HTTP GET with `open_timeout: 10`, `read_timeout: 30`, `write_timeout: 10`.
 4. Network exceptions (`SocketError`, `Net::OpenTimeout`, `OpenSSL::SSL::SSLError`, etc.) are wrapped as `UserError`.
-5. `Net::HTTPRedirection` (typically 302 to the login page) is treated as session expired and surfaces an actionable message.
+5. `Net::HTTPRedirection` (typically 302 to the login page) is treated as session expired and surfaces a message telling the user to refresh the cookie.
 6. On success the response body is written to the cached input path.
 
 `InputStore` is the cache layer: if the input file exists locally, return it; otherwise delegate to `Downloader`. Cached inputs never trigger network access.
@@ -208,12 +208,12 @@ Each public class takes its collaborators as keyword arguments with sensible def
 
 ## Linting
 
-**RuboCop (+ rubocop-performance) is the single linter for the whole repo.** The solutions and the runner share one `.rubocop.yml` and the same rules; there is no second tool. Linting is a strict, blocking gate (not advisory): `rake ci` requires RuboCop to pass on the entire repo and the runner tests to be green.
+RuboCop (+ rubocop-performance) is the single linter for the whole repo. The solutions and the runner share one `.rubocop.yml` and the same rules; there is no second tool. Linting is a strict, blocking gate (not advisory): `rake ci` requires RuboCop to pass on the entire repo and the runner tests to be green.
 
 The repo is still solution-first at the task level, so the commands are split by what you run when, even though the rules are uniform:
 
-- `rake check` lints the **solutions** (`20NN/NN.rb` + variants) — the surface you run while studying.
-- `rake runner:lint` lints the **runner** (`runner/**`, `Gemfile`, `Rakefile`); `rake runner:check` adds the test suite.
+- `rake check` lints the solutions (`20NN/NN.rb` + variants): the surface you run while studying.
+- `rake runner:lint` lints the runner (`runner/**`, `Gemfile`, `Rakefile`); `rake runner:check` adds the test suite.
 - `rake ci` = `runner:check` + `check`. Both call the shared `Commands.lint` helper (`ruby -c` per file, then `rubocop`) over `runner_files` and `solution_files` respectively.
 
-No house style was ever defined, so `.rubocop.yml` adopts RuboCop's defaults and only adjusts where the defaults are arbitrary thresholds rather than genuine lessons: Metrics limits (method/class length, ABC, complexity) are raised to project-appropriate values and excluded from the tests, `Style/Documentation` is off (namespaces and test classes need no preamble), and a few short domain parameter names are allowed. The cops that actually teach — Performance, Lint, and Style idiom (parallel assignment, numeric literals, ...) — are left fully strict.
+No house style was ever defined, so `.rubocop.yml` adopts RuboCop's defaults and only adjusts where the defaults are arbitrary thresholds rather than lessons worth following: Metrics limits (method/class length, ABC, complexity) are raised to project-appropriate values and excluded from the tests, `Style/Documentation` is off (namespaces and test classes need no preamble), and a few short domain parameter names are allowed. The cops that actually teach (Performance, Lint, and Style idiom: parallel assignment, numeric literals, ...) are left fully strict.

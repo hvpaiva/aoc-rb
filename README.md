@@ -6,7 +6,7 @@ Solutions live in year/day files, such as `2024/02.rb`. The runner in `runner/` 
 
 ## Setup
 
-Requires Ruby 4.0+. The checked-in `.ruby-version` pins the local development version; patch updates such as Ruby 4.0.3 are supported by the project requirement.
+Requires Ruby 4.0+. The checked-in `.ruby-version` pins the local development version.
 
 Install development dependencies:
 
@@ -85,7 +85,7 @@ rake 'all[2024]'
 rake 'all[2024,2]'
 ```
 
-Runs the canonical file and every variant of day 2 against the real input only (no examples) and prints a per-variant table with per-part timing. Answers that disagree across variants are flagged, and a variant that fails is marked without aborting its siblings. With no variants present, this is a one-row table — a quick way to time the real input without examples.
+Runs the canonical file and every variant of day 2 against the real input only (no examples) and prints a per-variant table with per-part timing. Answers that disagree across variants are flagged, and a variant that fails is marked without aborting its siblings. With no variants present, this is a one-row table: a quick way to time the real input without examples.
 
 ## Progress overview
 
@@ -105,7 +105,7 @@ rake check
 
 ## Checks and tests
 
-RuboCop is the single linter for the whole repo — the solutions and the runner share one config (`.rubocop.yml`) and the same rules. There is no separate tool for the runner:
+RuboCop is the single linter for the whole repo: the solutions and the runner share one config (`.rubocop.yml`) and the same rules. There is no separate tool for the runner:
 
 ```sh
 rake runner:test    # run the runner test suite (alias: rake test)
@@ -114,7 +114,7 @@ rake runner:check   # runner:lint + runner:test
 rake ci             # full gate: runner:check + rake check (what CI runs)
 ```
 
-`rake ci` is the complete gate used by CI: RuboCop must pass on the whole repo and the runner tests must be green. The config keeps RuboCop's defaults and only relaxes a few arbitrary thresholds (method/class length, etc.) to project-appropriate values — the cops that teach (Performance, Lint, Style idiom) stay strict. The runner test suite uses SimpleCov; coverage reports are written to `coverage/` after each run.
+`rake ci` is the complete gate used by CI: RuboCop must pass on the whole repo and the runner tests must be green. The config keeps RuboCop's defaults and only relaxes a few arbitrary thresholds (method/class length, etc.) to project-appropriate values. The cops that teach (Performance, Lint, Style idiom) stay strict. The runner test suite uses SimpleCov; coverage reports are written to `coverage/` after each run.
 
 ## Day file format
 
