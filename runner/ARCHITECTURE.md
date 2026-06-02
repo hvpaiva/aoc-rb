@@ -39,7 +39,7 @@ A day file (`YYYY/NN.rb`) looks like this:
 ```ruby
 # frozen_string_literal: true
 
-require_relative "../runner/aoc"
+require_relative '../runner/aoc'
 
 def parsed = @parsed ||= input.lines(chomp: true)
 
@@ -54,7 +54,7 @@ ghi
 INPUT
 ```
 
-`require_relative "../runner/aoc"` loads the runner and registers an `at_exit` hook. The day file then defines `part1`/`part2` at the top level and declares one or more `example` calls. After the script body finishes, the `at_exit` hook runs the solver against the examples and then the real input.
+`require_relative '../runner/aoc'` loads the runner and registers an `at_exit` hook. The day file then defines `part1`/`part2` at the top level and declares one or more `example` calls. After the script body finishes, the `at_exit` hook runs the solver against the examples and then the real input.
 
 The file shape is the runner's public contract. Internals can change freely; day files cannot.
 
@@ -95,7 +95,7 @@ Tests work around `Object` pollution by removing `part1`/`part2` in `teardown`.
 
 ## Boot lifecycle
 
-1. A day file (or `Rakefile`, or a test) calls `require_relative ".../runner/aoc"`.
+1. A day file (or `Rakefile`, or a test) calls `require_relative '.../runner/aoc'`.
 2. `runner/aoc.rb` requires all submodules in order.
 3. The bottom of `aoc.rb` calls `AOC::Boot.install!`.
 4. `Boot.install_dsl` installs `example` and `input` onto `TOPLEVEL_BINDING.receiver`. Idempotent.
