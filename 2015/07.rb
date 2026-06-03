@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../runner/aoc'
+require_relative "../runner/aoc"
 
 MASK = 0xffff
 
@@ -13,15 +13,15 @@ WIRE_A = Variable.new(:a)
 def instructions = @instructions ||= input.lines(chomp: true).to_h { parse(it) }
 
 def parse(line)
-  expression, wire = line.split(' -> ')
+  expression, wire = line.split(" -> ")
 
   node =
     case expression.split
     in [name]
       operand_for(name)
-    in ['NOT', operand]
+    in ["NOT", operand]
       Unary.new(:not, operand_for(operand))
-    in [lhs, 'AND' | 'OR' | 'LSHIFT' | 'RSHIFT' => op, rhs]
+    in [lhs, "AND" | "OR" | "LSHIFT" | "RSHIFT" => op, rhs]
       Binary.new(op.downcase.to_sym, operand_for(lhs), operand_for(rhs))
     else
       raise "Parse error: #{line.inspect}"

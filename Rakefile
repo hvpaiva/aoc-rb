@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'date'
+require "date"
 
-require_relative 'runner/aoc'
+require_relative "runner/aoc"
 
 task default: :help
 
@@ -40,13 +40,12 @@ namespace :runner do
   end
 end
 
-# Convenience alias preserved from the old surface; runs the runner tests.
-task test: 'runner:test'
+task test: "runner:test"
 
 (2015..Date.today.year).each do |year|
   namespace year.to_s.to_sym do
     (1..AOC::Calendar.max_day_for(year)).each do |day|
-      task format('%02d', day).to_sym, [:variant] do |_task, args|
+      task format("%02d", day).to_sym, [:variant] do |_task, args|
         run_aoc { AOC::Commands.run_day(year, day, variant: args[:variant]) }
       end
     end

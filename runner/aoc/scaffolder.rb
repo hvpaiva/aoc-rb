@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'fileutils'
+require "fileutils"
 
 module AOC
   # Generates a new day file from {TEMPLATE}. Refuses to overwrite an
@@ -9,17 +9,17 @@ module AOC
   # the canonical file, using the same template.
   class Scaffolder
     SLUG_PATTERN = /\A[a-z0-9]+\z/
-    RESERVED_SLUG = 'base'
+    RESERVED_SLUG = "base"
 
     TEMPLATE = <<~RUBY
       # frozen_string_literal: true
 
-      require_relative '../runner/aoc'
+      require_relative "../runner/aoc"
 
       def parsed = @parsed ||= input.lines(chomp: true)
 
       def part1
-        raise 'part1 not implemented'
+        raise "part1 not implemented"
       end
 
       # example <<~INPUT, part1: 0

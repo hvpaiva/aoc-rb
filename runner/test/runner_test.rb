@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'test_helper'
+require_relative "test_helper"
 
 class RunnerTest < Minitest::Test
   include RunnerTestSupport
@@ -29,8 +29,8 @@ class RunnerTest < Minitest::Test
 
     runner = AOC::Runner.new
 
-    assert_equal 1, runner.solve(1, 'first')
-    assert_equal 1, runner.solve(1, 'second')
+    assert_equal 1, runner.solve(1, "first")
+    assert_equal 1, runner.solve(1, "second")
   end
 
   def test_solve_rejects_part_methods_with_arguments
@@ -40,9 +40,9 @@ class RunnerTest < Minitest::Test
       end
     end
 
-    error = assert_raises(AOC::Runner::InvalidPartSignatureError) { AOC::Runner.new.solve(1, 'input') }
+    error = assert_raises(AOC::Runner::InvalidPartSignatureError) { AOC::Runner.new.solve(1, "input") }
 
-    assert_equal 'def part1 must take no required arguments; use input inside your methods.', error.message
+    assert_equal "def part1 must take no required arguments; use input inside your methods.", error.message
   end
 
   def test_solve_accepts_part_methods_with_default_arguments
@@ -50,25 +50,25 @@ class RunnerTest < Minitest::Test
       def part1(_unused = nil) = input.length
     end
 
-    assert_equal 3, AOC::Runner.new.solve(1, 'abc')
+    assert_equal 3, AOC::Runner.new.solve(1, "abc")
   end
 
   def test_run_executes_examples_and_real_input_in_process
     Object.class_eval do
       def part1 = input.chomp.upcase
     end
-    AOC::DSL.add_example("abc\n", part1: 'ABC')
+    AOC::DSL.add_example("abc\n", part1: "ABC")
     paths = FakePaths.new(year: 2024, day: 2)
     input_store = FakeInputStore.new("xyz\n")
 
     stdout, = capture_io do
-      AOC::Runner.new(paths: paths, input_store: input_store).run!(path: '2024/02.rb')
+      AOC::Runner.new(paths: paths, input_store: input_store).run!(path: "2024/02.rb")
     end
 
-    assert_includes stdout, 'Ruby Advent of Code 2024 day 02'
-    assert_includes stdout, 'Examples'
+    assert_includes stdout, "Ruby Advent of Code 2024 day 02"
+    assert_includes stdout, "Examples"
     assert_includes stdout, 'expected = got = "ABC"'
-    assert_includes stdout, 'Real input'
+    assert_includes stdout, "Real input"
     assert_includes stdout, 'part 1 answer: "XYZ"'
   end
 
@@ -77,26 +77,26 @@ class RunnerTest < Minitest::Test
 
     stdout, = capture_io do
       assert_raises(SystemExit) do
-        AOC::Runner.new(paths: paths, input_store: FakeInputStore.new('input')).run!(path: '2024/02.rb')
+        AOC::Runner.new(paths: paths, input_store: FakeInputStore.new("input")).run!(path: "2024/02.rb")
       end
     end
 
-    assert_includes stdout, 'Configuration error:'
-    assert_includes stdout, 'Define def part1 and/or def part2'
+    assert_includes stdout, "Configuration error:"
+    assert_includes stdout, "Define def part1 and/or def part2"
   end
 
   def test_run_reports_unexpected_errors
     paths = Object.new
-    paths.define_singleton_method(:infer_year_day) { |_path| raise 'boom' }
+    paths.define_singleton_method(:infer_year_day) { |_path| raise "boom" }
 
     stdout, = capture_io do
       assert_raises(SystemExit) do
-        AOC::Runner.new(paths: paths, input_store: FakeInputStore.new('input')).run!(path: 'bad.rb')
+        AOC::Runner.new(paths: paths, input_store: FakeInputStore.new("input")).run!(path: "bad.rb")
       end
     end
 
-    assert_includes stdout, 'Error:'
-    assert_includes stdout, 'RuntimeError: boom'
+    assert_includes stdout, "Error:"
+    assert_includes stdout, "RuntimeError: boom"
   end
 
   def test_run_all_day_outputs_json_results
@@ -109,9 +109,9 @@ class RunnerTest < Minitest::Test
     clock = -> { ticks.shift }
 
     AOC::Runner.new(paths: paths, input_store: FakeInputStore.new("abc\n"), output: output,
-                    clock: clock).run_all_day!(path: '2024/02.rb')
+      clock: clock).run_all_day!(path: "2024/02.rb")
 
-    assert_includes output.string, 'AOC_ALL_RESULT'
+    assert_includes output.string, "AOC_ALL_RESULT"
     assert_includes output.string, '"day":2'
     assert_includes output.string, '"part":1'
     assert_includes output.string, '"answer":"cba"'
@@ -121,16 +121,16 @@ class RunnerTest < Minitest::Test
   def test_run_all_day_reports_unexpected_errors
     paths = FakePaths.new(year: 2024, day: 2)
     input_store = Object.new
-    input_store.define_singleton_method(:read) { |_year, _day| raise 'input failed' }
+    input_store.define_singleton_method(:read) { |_year, _day| raise "input failed" }
 
     stdout, = capture_io do
       assert_raises(SystemExit) do
-        AOC::Runner.new(paths: paths, input_store: input_store).run_all_day!(path: '2024/02.rb')
+        AOC::Runner.new(paths: paths, input_store: input_store).run_all_day!(path: "2024/02.rb")
       end
     end
 
-    assert_includes stdout, 'Error:'
-    assert_includes stdout, 'RuntimeError: input failed'
+    assert_includes stdout, "Error:"
+    assert_includes stdout, "RuntimeError: input failed"
   end
 
   def test_run_all_day_reraises_system_exit_from_solution
@@ -140,7 +140,7 @@ class RunnerTest < Minitest::Test
     paths = FakePaths.new(year: 2024, day: 2)
 
     assert_raises(SystemExit) do
-      AOC::Runner.new(paths: paths, input_store: FakeInputStore.new("abc\n")).run_all_day!(path: '2024/02.rb')
+      AOC::Runner.new(paths: paths, input_store: FakeInputStore.new("abc\n")).run_all_day!(path: "2024/02.rb")
     end
   end
 
@@ -148,20 +148,20 @@ class RunnerTest < Minitest::Test
     Object.class_eval do
       def part1 = input.length
     end
-    AOC::DSL.add_example('abc', part2: 0)
+    AOC::DSL.add_example("abc", part2: 0)
 
     stdout, = capture_io do
       AOC::Runner.new.run_examples!([1])
     end
 
-    assert_includes stdout, 'skipped (def part2 not defined)'
+    assert_includes stdout, "skipped (def part2 not defined)"
   end
 
   def test_run_examples_exits_on_mismatch
     Object.class_eval do
       def part1 = input.length
     end
-    AOC::DSL.add_example('abc', part1: 99)
+    AOC::DSL.add_example("abc", part1: 99)
 
     stdout, = capture_io do
       assert_raises(SystemExit) do
@@ -169,16 +169,16 @@ class RunnerTest < Minitest::Test
       end
     end
 
-    assert_includes stdout, 'expected: 99'
-    assert_includes stdout, 'got: 3'
-    assert_includes stdout, 'Stopped before real input.'
+    assert_includes stdout, "expected: 99"
+    assert_includes stdout, "got: 3"
+    assert_includes stdout, "Stopped before real input."
   end
 
   def test_run_examples_exits_on_exception
     Object.class_eval do
-      def part1 = raise 'example exploded'
+      def part1 = raise "example exploded"
     end
-    AOC::DSL.add_example('abc', part1: 1)
+    AOC::DSL.add_example("abc", part1: 1)
 
     stdout, = capture_io do
       assert_raises(SystemExit) do
@@ -186,25 +186,25 @@ class RunnerTest < Minitest::Test
       end
     end
 
-    assert_includes stdout, 'raised RuntimeError'
-    assert_includes stdout, 'example exploded'
-    assert_includes stdout, 'Stopped before real input.'
+    assert_includes stdout, "raised RuntimeError"
+    assert_includes stdout, "example exploded"
+    assert_includes stdout, "Stopped before real input."
   end
 
   def test_run_real_input_exits_on_exception
     Object.class_eval do
-      def part1 = raise 'real exploded'
+      def part1 = raise "real exploded"
     end
 
     stdout, = capture_io do
       assert_raises(SystemExit) do
-        AOC::Runner.new(input_store: FakeInputStore.new('abc')).run_real_input!(2024, 2, [1])
+        AOC::Runner.new(input_store: FakeInputStore.new("abc")).run_real_input!(2024, 2, [1])
       end
     end
 
-    assert_includes stdout, 'Real input'
-    assert_includes stdout, 'raised RuntimeError'
-    assert_includes stdout, 'real exploded'
+    assert_includes stdout, "Real input"
+    assert_includes stdout, "raised RuntimeError"
+    assert_includes stdout, "real exploded"
   end
 
   def test_run_examples_is_noop_when_no_examples_declared
@@ -214,19 +214,19 @@ class RunnerTest < Minitest::Test
 
     stdout, = capture_io { AOC::Runner.new.run_examples!([1]) }
 
-    assert_empty stdout, 'no examples means no Examples header should be printed'
+    assert_empty stdout, "no examples means no Examples header should be printed"
   end
 
   def test_run_real_input_skips_render_when_aborted_via_fake_exiter
     Object.class_eval do
-      def part1 = raise 'fail fast'
+      def part1 = raise "fail fast"
       def part2 = 42
     end
     exits = []
 
     stdout, = capture_io do
       AOC::Runner.new(
-        input_store: FakeInputStore.new('abc'),
+        input_store: FakeInputStore.new("abc"),
         exiter: ->(success) { exits << success }
       ).run_real_input!(2024, 2, [1, 2])
     end
@@ -234,8 +234,8 @@ class RunnerTest < Minitest::Test
     # part1 failed, throw :stop ran, results never matched parts.length, so
     # no answer-line render happened.
     assert_equal [false], exits
-    refute_includes stdout, 'part 1 answer:'
-    refute_includes stdout, 'part 2 answer:'
+    refute_includes stdout, "part 1 answer:"
+    refute_includes stdout, "part 2 answer:"
   end
 
   def test_run_returns_after_config_error_with_fake_exiter
@@ -245,33 +245,33 @@ class RunnerTest < Minitest::Test
     stdout, = capture_io do
       AOC::Runner.new(
         paths: paths,
-        input_store: FakeInputStore.new('input'),
+        input_store: FakeInputStore.new("input"),
         exiter: ->(success) { exits << success }
-      ).run!(path: '2024/02.rb')
+      ).run!(path: "2024/02.rb")
     end
 
     assert_equal [false], exits
-    assert_includes stdout, 'Configuration error:'
+    assert_includes stdout, "Configuration error:"
     # Returning early means the Examples / Real input headers must not render.
-    refute_includes stdout, 'Examples'
-    refute_includes stdout, 'Real input'
+    refute_includes stdout, "Examples"
+    refute_includes stdout, "Real input"
   end
 
   def test_run_examples_throw_path_runs_with_fake_exiter
     Object.class_eval do
-      def part1 = raise 'exploded'
+      def part1 = raise "exploded"
     end
-    AOC::DSL.add_example('abc', part1: 1)
-    AOC::DSL.add_example('xyz', part1: 1)
+    AOC::DSL.add_example("abc", part1: 1)
+    AOC::DSL.add_example("xyz", part1: 1)
     exits = []
 
     stdout, = capture_io do
       AOC::Runner.new(exiter: ->(success) { exits << success })
-                 .run_examples!([1])
+        .run_examples!([1])
     end
 
     assert_equal [false], exits
     # Throw broke out of both loops, so the second example never ran.
-    refute_includes stdout, 'example  2'
+    refute_includes stdout, "example  2"
   end
 end

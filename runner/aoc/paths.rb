@@ -6,7 +6,7 @@ module AOC
   # `root:` and/or `config_dir:` for tests; production code typically uses
   # {Paths.default}.
   class Paths
-    DEFAULT_ROOT = Pathname(__dir__).join('..', '..').expand_path.freeze
+    DEFAULT_ROOT = Pathname(__dir__).join("..", "..").expand_path.freeze
     # Matches a day file path. The optional `[_-]<slug>` suffix admits variant
     # siblings (e.g. `06_bitset.rb`) while still capturing the two-digit day.
     DAY_FILE_PATTERN = %r{(?:^|/)(20\d{2})/(\d{2})(?:[_-][^/]*)?\.rb\z}
@@ -39,7 +39,7 @@ module AOC
       # @return [Boolean] true when the path matches the canonical
       #   `YYYY/NN.rb` shape.
       def day_file?(path)
-        Pathname(path).to_s.tr('\\', '/').match?(DAY_FILE_PATTERN)
+        Pathname(path).to_s.tr("\\", "/").match?(DAY_FILE_PATTERN)
       end
     end
 
@@ -52,29 +52,29 @@ module AOC
     def initialize(root: DEFAULT_ROOT, config_dir: nil, env: ENV)
       @root = Pathname(root).expand_path
       @config_dir = Pathname(
-        config_dir || env.fetch('AOC_CONFIG_DIR') { default_config_dir }
+        config_dir || env.fetch("AOC_CONFIG_DIR") { default_config_dir }
       ).expand_path
     end
 
     # @return [Pathname] `root/inputs`.
-    def inputs_dir = root.join('inputs')
+    def inputs_dir = root.join("inputs")
 
     # @return [Pathname] `root/.cache`, used by Downloader for the throttle
     #   stamp.
-    def cache_dir = root.join('.cache')
+    def cache_dir = root.join(".cache")
 
     # @param year [Integer, String]
     # @param day [Integer, String]
     # @return [Pathname] absolute path to the day source file.
     def day_path(year, day)
-      root.join(year.to_s, "#{format('%02d', Integer(day))}.rb")
+      root.join(year.to_s, "#{format("%02d", Integer(day))}.rb")
     end
 
     # @param year [Integer, String]
     # @param day [Integer, String]
     # @return [Pathname] absolute path to the cached input file.
     def input_path(year, day)
-      inputs_dir.join(year.to_s, "#{format('%02d', Integer(day))}.txt")
+      inputs_dir.join(year.to_s, "#{format("%02d", Integer(day))}.txt")
     end
 
     # @param year [Integer, String]
@@ -83,14 +83,14 @@ module AOC
     # @return [Pathname] absolute path to a variant day source file
     #   (`YYYY/NN_<slug>.rb`).
     def variant_path(year, day, slug)
-      root.join(year.to_s, "#{format('%02d', Integer(day))}_#{slug}.rb")
+      root.join(year.to_s, "#{format("%02d", Integer(day))}_#{slug}.rb")
     end
 
     # @param year [Integer]
     # @return [Array<Pathname>] sorted list of existing day files for the
     #   given year.
     def day_files(year)
-      Pathname.glob(root.join(year.to_s, '[0-9][0-9].rb')).sort_by(&:to_s)
+      Pathname.glob(root.join(year.to_s, "[0-9][0-9].rb")).sort_by(&:to_s)
     end
 
     # @param year [Integer, String]
@@ -98,7 +98,7 @@ module AOC
     # @return [Array<Pathname>] existing files for the day: canonical first
     #   (when it exists), then variant siblings sorted by name.
     def day_variants(year, day)
-      nn = format('%02d', Integer(day))
+      nn = format("%02d", Integer(day))
       canonical = root.join(year.to_s, "#{nn}.rb")
       variants = Pathname.glob(root.join(year.to_s, "#{nn}[_-]*.rb")).sort_by(&:to_s)
 
@@ -111,7 +111,7 @@ module AOC
     # @param path [String, Pathname]
     # @return [String, nil] the variant slug, or nil when the path is canonical.
     def infer_variant(path)
-      match = Pathname(path).to_s.tr('\\', '/').match(VARIANT_PATTERN)
+      match = Pathname(path).to_s.tr("\\", "/").match(VARIANT_PATTERN)
       match && match[1]
     end
 
@@ -128,7 +128,7 @@ module AOC
     # @raise [UserError] when the path does not match `YYYY/NN.rb` or the
     #   numbers fall outside the AoC calendar.
     def infer_year_day(path)
-      normalized = Pathname(path).to_s.tr('\\', '/')
+      normalized = Pathname(path).to_s.tr("\\", "/")
       match = normalized.match(DAY_FILE_PATTERN)
 
       raise UserError, "Could not infer year/day from #{path.inspect}. Use a structure like 2024/02.rb." unless match
@@ -143,7 +143,7 @@ module AOC
     private
 
     def default_config_dir
-      File.join(Dir.home, '.config', 'aoc-rb')
+      File.join(Dir.home, ".config", "aoc-rb")
     end
   end
 end

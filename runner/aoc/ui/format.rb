@@ -6,7 +6,7 @@ module AOC
     # safe to call from anywhere in the renderer.
     module Format
       MAX_VALUE_LENGTH = 160
-      VALUE_TRUNCATION_TAIL = '...'
+      VALUE_TRUNCATION_TAIL = "..."
 
       module_function
 
@@ -21,9 +21,9 @@ module AOC
         milliseconds = elapsed * 1000
 
         if milliseconds < 10
-          format('%.2fms', milliseconds)
+          format("%.2fms", milliseconds)
         else
-          format('%.1fms', milliseconds)
+          format("%.1fms", milliseconds)
         end
       end
     end

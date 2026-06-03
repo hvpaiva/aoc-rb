@@ -43,7 +43,7 @@ module AOC
           next if failure.call
 
           runner = runner_factory.call
-          env['AOC_RUN_MODE'] == 'all' ? runner.run_all_day! : runner.run!
+          (env["AOC_RUN_MODE"] == "all") ? runner.run_all_day! : runner.run!
         end
       end
     end

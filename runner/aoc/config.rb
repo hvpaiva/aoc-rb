@@ -14,21 +14,21 @@ module AOC
     end
 
     # @return [String, nil] session cookie, or nil when unset.
-    def session = value('session')
+    def session = value("session")
 
     # @return [String, nil] HTTP User-Agent, or nil when unset.
-    def user_agent = value('user_agent')
+    def user_agent = value("user_agent")
 
     # @return [String] session cookie.
     # @raise [UserError] when no session is configured.
     def session!
-      session || raise(UserError, "Configure AOC_SESSION or #{@paths.config_dir.join('session')}.")
+      session || raise(UserError, "Configure AOC_SESSION or #{@paths.config_dir.join("session")}.")
     end
 
     # @return [String] HTTP User-Agent.
     # @raise [UserError] when no User-Agent is configured.
     def user_agent!
-      user_agent || raise(UserError, "Configure AOC_USER_AGENT or #{@paths.config_dir.join('user_agent')}.")
+      user_agent || raise(UserError, "Configure AOC_USER_AGENT or #{@paths.config_dir.join("user_agent")}.")
     end
 
     # Minimum interval between downloads, in seconds. Defaults to 300.
@@ -36,13 +36,13 @@ module AOC
     # @raise [UserError] when `AOC_MIN_INTERVAL_SECONDS` is negative or
     #   non-integer.
     def min_interval_seconds
-      raw = @env['AOC_MIN_INTERVAL_SECONDS']
+      raw = @env["AOC_MIN_INTERVAL_SECONDS"]
       return 300 if raw.nil? || raw.strip.empty?
 
       value = Integer(raw)
       if value.negative?
         raise UserError,
-              "AOC_MIN_INTERVAL_SECONDS must be a non-negative integer (got #{raw.inspect})."
+          "AOC_MIN_INTERVAL_SECONDS must be a non-negative integer (got #{raw.inspect})."
       end
 
       value

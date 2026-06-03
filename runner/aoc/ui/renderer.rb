@@ -27,26 +27,26 @@ module AOC
       # ----- headers --------------------------------------------------------
 
       def title(year, day)
-        puts "#{icon(:tree)} #{bold('Ruby Advent of Code')} #{year} day #{format('%02d', day)}"
+        puts "#{icon(:tree)} #{bold("Ruby Advent of Code")} #{year} day #{format("%02d", day)}"
       end
 
       def year_title(year)
-        puts "#{icon(:tree)} #{bold('Ruby Advent of Code')} #{year}"
+        puts "#{icon(:tree)} #{bold("Ruby Advent of Code")} #{year}"
       end
 
       def overview_title
-        puts "#{icon(:tree)} #{bold('Ruby Advent of Code')}"
+        puts "#{icon(:tree)} #{bold("Ruby Advent of Code")}"
         puts
       end
 
       def examples_header
         puts
-        puts cyan('Examples')
+        puts cyan("Examples")
       end
 
       def real_header
         puts
-        puts cyan('Real input')
+        puts cyan("Real input")
       end
 
       # ----- example outcomes ----------------------------------------------
@@ -60,7 +60,7 @@ module AOC
         puts "     expected: #{value(expected)}"
         puts "          got: #{value(actual)}"
         puts
-        puts red('Stopped before real input.')
+        puts red("Stopped before real input.")
       end
 
       def example_exception(label, part, exception)
@@ -68,7 +68,7 @@ module AOC
         puts "     #{exception.message}"
         print_backtrace(exception)
         puts
-        puts red('Stopped before real input.')
+        puts red("Stopped before real input.")
       end
 
       def example_skip(label, part)
@@ -99,19 +99,19 @@ module AOC
       # ----- top-level errors ----------------------------------------------
 
       def config_error(message)
-        puts red('Configuration error:')
+        puts red("Configuration error:")
         puts "  #{message}"
       end
 
       def error(exception)
-        puts red('Error:')
+        puts red("Error:")
         puts "  #{exception.class}: #{exception.message}"
         print_backtrace(exception)
       end
 
       def print_backtrace(exception)
         lines = Array(exception.backtrace)
-        lines = lines.first(MAX_BACKTRACE_LINES) unless @env['AOC_DEBUG']
+        lines = lines.first(MAX_BACKTRACE_LINES) unless @env["AOC_DEBUG"]
 
         lines.each { |line| puts "     #{dim(line)}" }
       end
@@ -170,7 +170,7 @@ module AOC
       # ----- internal renderers --------------------------------------------
 
       def print_all_result(result, answer_width)
-        day = blue("day #{format('%02d', result.day)}")
+        day = blue("day #{format("%02d", result.day)}")
         part_label = part_title(result.part)
         answer = value(result.answer).ljust(answer_width)
         puts "#{yellow(icon(:star))} #{day} · #{part_label} · answer: #{answer}  #{elapsed_time(result.elapsed)}"
@@ -202,9 +202,9 @@ module AOC
 
       def comparison_status_line(label, label_width, ok)
         name = blue(label.ljust(label_width))
-        return "#{yellow(icon(:skip))} #{name} · #{dim('no parts implemented')}" if ok
+        return "#{yellow(icon(:skip))} #{name} · #{dim("no parts implemented")}" if ok
 
-        "#{red(icon(:boom))} #{name} · #{red('errored (run it directly for the trace)')}"
+        "#{red(icon(:boom))} #{name} · #{red("errored (run it directly for the trace)")}"
       end
 
       def comparison_diverging_parts(variants)
@@ -223,7 +223,7 @@ module AOC
         return if diverging.empty?
 
         puts
-        parts = diverging.map { |part| "part #{part}" }.join(' and ')
+        parts = diverging.map { |part| "part #{part}" }.join(" and ")
         puts red("Variants disagree on #{parts}.")
       end
 
@@ -240,7 +240,7 @@ module AOC
           height = cards.map(&:length).max
 
           height.times do |line_index|
-            puts cards.map { |card| pad_overview_cell(card[line_index] || '') }.join('    ').rstrip
+            puts cards.map { |card| pad_overview_cell(card[line_index] || "") }.join("    ").rstrip
           end
 
           puts
@@ -259,21 +259,21 @@ module AOC
         return yellow(icon(:star)) if done
 
         star = dim(icon(:empty_star))
-        @env['AOC_ASCII'] ? star : "#{star} "
+        @env["AOC_ASCII"] ? star : "#{star} "
       end
 
       def pad_overview_cell(text)
-        text + (' ' * [overview_cell_width - visible_width(text), 0].max)
+        text + (" " * [overview_cell_width - visible_width(text), 0].max)
       end
 
       def overview_cell_width
-        @env['AOC_ASCII'] ? OVERVIEW_CELL_WIDTH_ASCII : OVERVIEW_CELL_WIDTH_UNICODE
+        @env["AOC_ASCII"] ? OVERVIEW_CELL_WIDTH_ASCII : OVERVIEW_CELL_WIDTH_UNICODE
       end
 
       # Approximates terminal column width: strips ANSI escapes and treats the
       # star icon as width 2 (the only wide glyph that appears in the grid).
       def visible_width(text)
-        text.gsub(/\e\[[\d;]*m/, '').chars.sum { |char| char == icon(:star) ? 2 : 1 }
+        text.gsub(/\e\[[\d;]*m/, "").chars.sum { |char| (char == icon(:star)) ? 2 : 1 }
       end
 
       # ----- ANSI / format delegates ---------------------------------------
@@ -292,14 +292,14 @@ module AOC
 
       def part_title(part)
         text = "part #{part}"
-        part == 1 ? yellow(text) : magenta(text)
+        (part == 1) ? yellow(text) : magenta(text)
       end
 
       def elapsed_time(elapsed)
         dim("(#{Format.ms(elapsed)})")
       end
 
-      def puts(text = '')
+      def puts(text = "")
         @output.puts(text)
       end
     end

@@ -2,7 +2,7 @@
 
 Solutions for [Advent of Code](https://adventofcode.com/) challenges in Ruby.
 
-Solutions live in year/day files, such as `2024/02.rb`. The runner in `runner/` is an internal support tool: it creates day files, downloads/caches inputs, runs examples before real input, and executes solutions through `ruby` or `rake`. The challenge solutions are the focus of the repository; the runner is not a gem, product, or public library.
+Solutions live in year/day files, such as `2024/02.rb`. The runner in `runner/` is an internal support tool: it creates day files, downloads/caches inputs, runs examples before real input, and executes solutions through `ruby` or `rake`.
 
 ## Setup
 
@@ -97,7 +97,7 @@ rake all
 
 ## Studying the solutions
 
-The solutions are the focus, so `rake check` lints the day files (and variants) with RuboCop + `rubocop-performance`, pointing out idiom, complexity, and slow-pattern improvements:
+`rake check` lints the day files (and variants) with [Standard](https://github.com/standardrb/standard), pointing out idiom and slow-pattern improvements:
 
 ```sh
 rake check
@@ -105,28 +105,28 @@ rake check
 
 ## Checks and tests
 
-RuboCop is the single linter for the whole repo: the solutions and the runner share one config (`.rubocop.yml`) and the same rules. There is no separate tool for the runner:
+Standard is the single linter for the whole repo; the solutions and the runner share the same rules:
 
 ```sh
 rake runner:test    # run the runner test suite (alias: rake test)
-rake runner:lint    # syntax + RuboCop over runner/, Gemfile, Rakefile
+rake runner:lint    # syntax + Standard over runner/, Gemfile, Rakefile
 rake runner:check   # runner:lint + runner:test
 rake ci             # full gate: runner:check + rake check (what CI runs)
 ```
 
-`rake ci` is the complete gate used by CI: RuboCop must pass on the whole repo and the runner tests must be green. The config keeps RuboCop's defaults and only relaxes a few arbitrary thresholds (method/class length, etc.) to project-appropriate values. The cops that teach (Performance, Lint, Style idiom) stay strict. The runner test suite uses SimpleCov; coverage reports are written to `coverage/` after each run.
+`rake ci` is the complete gate used by CI: Standard must pass on the whole repo and the runner tests must be green. The runner test suite uses SimpleCov; coverage reports are written to `coverage/` after each run.
 
 ## Day file format
 
 ```ruby
 # frozen_string_literal: true
 
-require_relative '../runner/aoc'
+require_relative "../runner/aoc"
 
 def parsed = @parsed ||= input.lines(chomp: true)
 
 def part1
-  raise 'part1 not implemented'
+  raise "part1 not implemented"
 end
 
 example <<~INPUT, part1: 2

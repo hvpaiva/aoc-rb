@@ -17,36 +17,36 @@ module AOC
       }.freeze
 
       ICONS = {
-        tree: '🎄',
-        ok: '✅',
-        fail: '❌',
-        star: '⭐',
-        empty_star: '☆',
-        skip: '⏩',
-        boom: '💥'
+        tree: "🎄",
+        ok: "✅",
+        fail: "❌",
+        star: "⭐",
+        empty_star: "☆",
+        skip: "⏩",
+        boom: "💥"
       }.freeze
 
       ASCII_ICONS = {
-        tree: '',
-        ok: '*',
-        fail: '!',
-        star: '*',
-        empty_star: '-',
-        skip: '>',
-        boom: 'x'
+        tree: "",
+        ok: "*",
+        fail: "!",
+        star: "*",
+        empty_star: "-",
+        skip: ">",
+        boom: "x"
       }.freeze
 
       module_function
 
       def color(code, text, output:, env:)
         return text unless output.tty?
-        return text if env['NO_COLOR'] || env['TERM'] == 'dumb'
+        return text if env["NO_COLOR"] || env["TERM"] == "dumb"
 
         "\e[#{code}m#{text}\e[0m"
       end
 
       def icon(name, env:)
-        env['AOC_ASCII'] ? ASCII_ICONS.fetch(name) : ICONS.fetch(name)
+        env["AOC_ASCII"] ? ASCII_ICONS.fetch(name) : ICONS.fetch(name)
       end
 
       COLORS.each do |name, code|

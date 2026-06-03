@@ -1,6 +1,6 @@
 # Runner Architecture
 
-The `runner/` directory is an internal support tool for Advent of Code solutions. It is not a gem, library, or product. This document explains the design so someone reading the code cold has a map.
+The `runner/` directory is an internal support tool for Advent of Code solutions. This document explains the design so someone reading the code cold has a map.
 
 ## Module map
 
@@ -39,7 +39,7 @@ A day file (`YYYY/NN.rb`) looks like this:
 ```ruby
 # frozen_string_literal: true
 
-require_relative '../runner/aoc'
+require_relative "../runner/aoc"
 
 def parsed = @parsed ||= input.lines(chomp: true)
 
@@ -54,7 +54,7 @@ ghi
 INPUT
 ```
 
-`require_relative '../runner/aoc'` loads the runner and registers an `at_exit` hook. The day file then defines `part1`/`part2` at the top level and declares one or more `example` calls. After the script body finishes, the `at_exit` hook runs the solver against the examples and then the real input.
+`require_relative "../runner/aoc"` loads the runner and registers an `at_exit` hook. The day file then defines `part1`/`part2` at the top level and declares one or more `example` calls. After the script body finishes, the `at_exit` hook runs the solver against the examples and then the real input.
 
 The file shape is the runner's public contract. Internals can change freely; day files cannot.
 
@@ -208,12 +208,12 @@ Each public class takes its collaborators as keyword arguments with sensible def
 
 ## Linting
 
-RuboCop (+ rubocop-performance) is the single linter for the whole repo. The solutions and the runner share one `.rubocop.yml` and the same rules; there is no second tool. Linting is a strict, blocking gate (not advisory): `rake ci` requires RuboCop to pass on the entire repo and the runner tests to be green.
+Standard is the single linter for the whole repo. The solutions and the runner share the same rules. Linting is a blocking gate: `rake ci` requires Standard to pass on the entire repo and the runner tests to be green.
 
-The repo is still solution-first at the task level, so the commands are split by what you run when, even though the rules are uniform:
+The commands are split by what you run when:
 
 - `rake check` lints the solutions (`20NN/NN.rb` + variants): the surface you run while studying.
 - `rake runner:lint` lints the runner (`runner/**`, `Gemfile`, `Rakefile`); `rake runner:check` adds the test suite.
-- `rake ci` = `runner:check` + `check`. Both call the shared `Commands.lint` helper (`ruby -c` per file, then `rubocop`) over `runner_files` and `solution_files` respectively.
+- `rake ci` = `runner:check` + `check`. Both call the shared `Commands.lint` helper (`ruby -c` per file, then `standardrb`) over `runner_files` and `solution_files` respectively.
 
-No house style was ever defined, so `.rubocop.yml` adopts RuboCop's defaults and only adjusts where the defaults are arbitrary thresholds rather than lessons worth following: Metrics limits (method/class length, ABC, complexity) are raised to project-appropriate values and excluded from the tests, `Style/Documentation` is off (namespaces and test classes need no preamble), and a few short domain parameter names are allowed. The cops that actually teach (Performance, Lint, and Style idiom: parallel assignment, numeric literals, ...) are left fully strict.
+`.standard.yml` only ignores `vendor/` and `coverage/`.

@@ -12,7 +12,7 @@ module AOC
       def input
         return @__aoc_input if instance_variable_defined?(:@__aoc_input)
 
-        raise InputNotReadyError, 'input is not available yet'
+        raise InputNotReadyError, "input is not available yet"
       end
 
       def __aoc_input=(value)
@@ -37,7 +37,7 @@ module AOC
         end
 
         target.define_singleton_method(:input) do
-          raise InputNotReadyError, 'input is not available yet'
+          raise InputNotReadyError, "input is not available yet"
         end
 
         target.singleton_class.send(:private, :example, :input)
@@ -48,7 +48,7 @@ module AOC
         expected[1] = part1 unless part1.equal?(UNSET)
         expected[2] = part2 unless part2.equal?(UNSET)
 
-        raise UserError, 'example requires part1: and/or part2:.' if expected.empty?
+        raise UserError, "example requires part1: and/or part2:." if expected.empty?
 
         examples << Example.new(input: input, expected: expected, name: name)
       end

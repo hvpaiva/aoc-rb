@@ -46,7 +46,7 @@ module AOC
       @ui.title(year, day)
 
       if parts.empty?
-        @ui.config_error('Define def part1 and/or def part2 in the day file.')
+        @ui.config_error("Define def part1 and/or def part2 in the day file.")
         @exiter.call(false)
         return
       end
@@ -55,7 +55,7 @@ module AOC
       run_real_input!(year, day, parts)
     rescue SystemExit
       raise
-    rescue StandardError => e
+    rescue => e
       @ui.error(e)
       @exiter.call(false)
     end
@@ -82,7 +82,7 @@ module AOC
       end
     rescue SystemExit
       raise
-    rescue StandardError => e
+    rescue => e
       @ui.error(e)
       @exiter.call(false)
     end
@@ -94,7 +94,7 @@ module AOC
 
       catch(:stop) do
         DSL.examples.each_with_index do |example, index|
-          label = example.name || "example #{format('%2d', index + 1)}"
+          label = example.name || "example #{format("%2d", index + 1)}"
 
           example.expected.each do |part, expected|
             unless parts.include?(part)
@@ -111,7 +111,7 @@ module AOC
               @exiter.call(false)
               throw :stop
             end
-          rescue StandardError => e
+          rescue => e
             @ui.example_exception(label, part, e)
             @exiter.call(false)
             throw :stop
@@ -133,7 +133,7 @@ module AOC
           begin
             answer = solve(part, real_input)
             elapsed = monotonic_time - started
-          rescue StandardError => e
+          rescue => e
             elapsed = monotonic_time - started
             @ui.real_exception(part, e, elapsed)
             @exiter.call(false)
@@ -169,7 +169,7 @@ module AOC
 
       if method.parameters.any? { |type, _| type == :req }
         raise InvalidPartSignatureError,
-              "def part#{part} must take no required arguments; use input inside your methods."
+          "def part#{part} must take no required arguments; use input inside your methods."
       end
 
       method.call
