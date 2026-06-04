@@ -103,6 +103,7 @@ module AOC
       @ui.examples_header
 
       passed = true
+      skipped = Hash.new(0)
 
       catch(:stop) do
         DSL.examples.each_with_index do |example, index|
@@ -110,7 +111,7 @@ module AOC
 
           example.expected.each do |part, expected|
             unless parts.include?(part)
-              @ui.example_skip(label, part)
+              skipped[part] += 1
               next
             end
 
@@ -129,6 +130,8 @@ module AOC
           end
         end
       end
+
+      skipped.sort.each { |part, count| @ui.examples_skipped(part, count) }
 
       @ui.examples_stopped unless passed
 

@@ -144,17 +144,19 @@ class RunnerTest < Minitest::Test
     end
   end
 
-  def test_run_examples_skips_missing_part
+  def test_run_examples_collapses_skips_for_missing_part
     Object.class_eval do
       def part1 = input.length
     end
     AOC::DSL.add_example("abc", part2: 0)
+    AOC::DSL.add_example("xy", part2: 0)
 
     stdout, = capture_io do
       AOC::Runner.new.run_examples!([1])
     end
 
-    assert_includes stdout, "skipped (def part2 not defined)"
+    assert_includes stdout, "2 examples skipped"
+    assert_includes stdout, "(def part2 not defined)"
   end
 
   def test_run_examples_continues_past_mismatch_and_returns_false

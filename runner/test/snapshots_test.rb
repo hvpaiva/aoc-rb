@@ -108,7 +108,7 @@ class SnapshotsTest < Minitest::Test
     assert_equal <<~OUT, output.string
 
       Examples
-        > example  1 · part 2  skipped (def part2 not defined)
+        > 1 example skipped  (def part2 not defined)
     OUT
   end
 

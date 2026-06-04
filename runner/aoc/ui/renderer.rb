@@ -72,8 +72,9 @@ module AOC
         puts red("Stopped before real input.")
       end
 
-      def example_skip(label, part)
-        puts "  #{yellow(icon(:skip))} #{example_title(label, part)}  #{dim("skipped (def part#{part} not defined)")}"
+      def examples_skipped(part, count)
+        noun = (count == 1) ? "example" : "examples"
+        puts "  #{yellow(icon(:skip))} #{count} #{noun} skipped  #{dim("(def part#{part} not defined)")}"
       end
 
       # ----- real input outcomes -------------------------------------------
