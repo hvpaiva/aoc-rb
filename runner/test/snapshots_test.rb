@@ -65,8 +65,7 @@ class SnapshotsTest < Minitest::Test
     AOC::DSL.add_example("abc", part1: 99)
 
     output = StringIO.new
-    AOC::Runner.new(ui: ascii_renderer(output), exiter: noop_exiter)
-      .run_examples!([1])
+    AOC::Runner.new(ui: ascii_renderer(output)).run_examples!([1])
 
     assert_equal <<~OUT, output.string
 
@@ -74,6 +73,26 @@ class SnapshotsTest < Minitest::Test
         ! example  1 · part 1
            expected: 99
                 got: 3
+
+      Stopped before real input.
+    OUT
+  end
+
+  def test_ascii_example_failure_still_runs_remaining_examples
+    Object.class_eval { def part1 = input.length }
+    AOC::DSL.add_example("abc", part1: 99)
+    AOC::DSL.add_example("wxyz", part1: 4)
+
+    output = StringIO.new
+    AOC::Runner.new(ui: ascii_renderer(output)).run_examples!([1])
+
+    assert_equal <<~OUT, output.string
+
+      Examples
+        ! example  1 · part 1
+           expected: 99
+                got: 3
+        * example  2 · part 1  expected = got = 4
 
       Stopped before real input.
     OUT
@@ -98,8 +117,7 @@ class SnapshotsTest < Minitest::Test
     AOC::DSL.add_example("abc", part1: 1)
 
     output = StringIO.new
-    AOC::Runner.new(ui: ascii_renderer(output), exiter: noop_exiter)
-      .run_examples!([1])
+    AOC::Runner.new(ui: ascii_renderer(output)).run_examples!([1])
 
     body = output.string.lines
     backtrace_dropped = body.reject { |line| line.start_with?("     /") || line.match?(/\.rb:\d+/) }

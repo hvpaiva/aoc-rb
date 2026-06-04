@@ -157,38 +157,77 @@ class RunnerTest < Minitest::Test
     assert_includes stdout, "skipped (def part2 not defined)"
   end
 
-  def test_run_examples_exits_on_mismatch
+  def test_run_examples_continues_past_mismatch_and_returns_false
     Object.class_eval do
       def part1 = input.length
     end
     AOC::DSL.add_example("abc", part1: 99)
+    AOC::DSL.add_example("xyz", part1: 3)
 
+    passed = nil
     stdout, = capture_io do
-      assert_raises(SystemExit) do
-        AOC::Runner.new.run_examples!([1])
-      end
+      passed = AOC::Runner.new.run_examples!([1])
     end
 
+    refute passed
     assert_includes stdout, "expected: 99"
     assert_includes stdout, "got: 3"
+    assert_includes stdout, "example  2"
     assert_includes stdout, "Stopped before real input."
   end
 
-  def test_run_examples_exits_on_exception
+  def test_run_examples_returns_true_when_all_pass
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part1: 3)
+
+    passed = nil
+    stdout, = capture_io do
+      passed = AOC::Runner.new.run_examples!([1])
+    end
+
+    assert passed
+    refute_includes stdout, "Stopped before real input."
+  end
+
+  def test_run_examples_aborts_on_exception_and_returns_false
     Object.class_eval do
       def part1 = raise "example exploded"
     end
     AOC::DSL.add_example("abc", part1: 1)
+    AOC::DSL.add_example("xyz", part1: 1)
 
+    passed = nil
     stdout, = capture_io do
-      assert_raises(SystemExit) do
-        AOC::Runner.new.run_examples!([1])
-      end
+      passed = AOC::Runner.new.run_examples!([1])
     end
 
+    refute passed
     assert_includes stdout, "raised RuntimeError"
     assert_includes stdout, "example exploded"
     assert_includes stdout, "Stopped before real input."
+    refute_includes stdout, "example  2"
+  end
+
+  def test_run_exits_without_real_input_when_examples_fail
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part1: 99)
+    exits = []
+
+    stdout, = capture_io do
+      AOC::Runner.new(
+        paths: FakePaths.new(year: 2024, day: 2),
+        input_store: FakeInputStore.new("hello\n"),
+        exiter: ->(success) { exits << success }
+      ).run!(path: "2024/02.rb")
+    end
+
+    assert_equal [false], exits
+    assert_includes stdout, "Stopped before real input."
+    refute_includes stdout, "Real input"
   end
 
   def test_run_real_input_exits_on_exception
@@ -255,23 +294,5 @@ class RunnerTest < Minitest::Test
     # Returning early means the Examples / Real input headers must not render.
     refute_includes stdout, "Examples"
     refute_includes stdout, "Real input"
-  end
-
-  def test_run_examples_throw_path_runs_with_fake_exiter
-    Object.class_eval do
-      def part1 = raise "exploded"
-    end
-    AOC::DSL.add_example("abc", part1: 1)
-    AOC::DSL.add_example("xyz", part1: 1)
-    exits = []
-
-    stdout, = capture_io do
-      AOC::Runner.new(exiter: ->(success) { exits << success })
-        .run_examples!([1])
-    end
-
-    assert_equal [false], exits
-    # Throw broke out of both loops, so the second example never ran.
-    refute_includes stdout, "example  2"
   end
 end

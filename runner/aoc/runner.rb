@@ -51,8 +51,11 @@ module AOC
         return
       end
 
-      run_examples!(parts)
-      run_real_input!(year, day, parts)
+      if run_examples!(parts)
+        run_real_input!(year, day, parts)
+      else
+        @exiter.call(false)
+      end
     rescue SystemExit
       raise
     rescue => e
@@ -87,10 +90,18 @@ module AOC
       @exiter.call(false)
     end
 
+    # Runs every declared example. A wrong answer marks the run as failed
+    # but the remaining examples still execute, so a single broken case
+    # never hides the others. An exception aborts immediately: it is a
+    # structural bug, not a wrong answer, and would likely repeat.
+    #
+    # @return [Boolean] true when all examples passed (or none declared).
     def run_examples!(parts)
-      return if DSL.examples.empty?
+      return true if DSL.examples.empty?
 
       @ui.examples_header
+
+      passed = true
 
       catch(:stop) do
         DSL.examples.each_with_index do |example, index|
@@ -108,16 +119,19 @@ module AOC
               @ui.example_ok(label, part, actual)
             else
               @ui.example_fail(label, part, expected, actual)
-              @exiter.call(false)
-              throw :stop
+              passed = false
             end
           rescue => e
             @ui.example_exception(label, part, e)
-            @exiter.call(false)
+            passed = false
             throw :stop
           end
         end
       end
+
+      @ui.examples_stopped unless passed
+
+      passed
     end
 
     def run_real_input!(year, day, parts)

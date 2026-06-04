@@ -55,12 +55,19 @@ class RendererTest < Minitest::Test
     assert_includes output.string, "expected = got = 42"
   end
 
-  def test_example_fail_prints_expected_and_actual_and_stop_message
+  def test_example_fail_prints_expected_and_actual
     output = StringIO.new
     AOC::UI::Renderer.new(output: output, env: {}).example_fail("example 1", 1, 99, 3)
 
     assert_includes output.string, "expected: 99"
     assert_includes output.string, "got: 3"
+    refute_includes output.string, "Stopped before real input."
+  end
+
+  def test_examples_stopped_prints_stop_message
+    output = StringIO.new
+    AOC::UI::Renderer.new(output: output, env: {}).examples_stopped
+
     assert_includes output.string, "Stopped before real input."
   end
 

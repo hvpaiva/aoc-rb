@@ -59,14 +59,15 @@ module AOC
         puts "  #{red(icon(:fail))} #{example_title(label, part)}"
         puts "     expected: #{value(expected)}"
         puts "          got: #{value(actual)}"
-        puts
-        puts red("Stopped before real input.")
       end
 
       def example_exception(label, part, exception)
         puts "  #{red(icon(:boom))} #{example_title(label, part)}  #{red("raised #{exception.class}")}"
         puts "     #{exception.message}"
         print_backtrace(exception)
+      end
+
+      def examples_stopped
         puts
         puts red("Stopped before real input.")
       end
