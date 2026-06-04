@@ -4,25 +4,25 @@ require_relative "../runner/aoc"
 
 MASK = 0xffff
 
-Variable = Data.define(:name)
+Wire = Data.define(:name)
 Unary = Data.define(:op, :operand)
 Binary = Data.define(:op, :lhs, :rhs)
-
-WIRE_A = Variable.new(:a)
-
-def instructions = @instructions ||= input.lines(chomp: true).to_h { parse(it) }
 
 def parse(line)
   expression, wire = line.split(" -> ")
 
   node =
     case expression.split
-    in [name]
-      operand_for(name)
+    in [token]
+      operand_for(token)
     in ["NOT", operand]
       Unary.new(:not, operand_for(operand))
     in [lhs, "AND" | "OR" | "LSHIFT" | "RSHIFT" => op, rhs]
-      Binary.new(op.downcase.to_sym, operand_for(lhs), operand_for(rhs))
+      Binary.new(
+        op.downcase.to_sym,
+        operand_for(lhs),
+        operand_for(rhs)
+      )
     else
       raise "Parse error: #{line.inspect}"
     end
@@ -31,32 +31,36 @@ def parse(line)
 end
 
 def operand_for(token)
-  Integer(token, exception: false) || Variable.new(token.to_sym)
+  Integer(token, exception: false) || Wire.new(token.to_sym)
 end
 
 class Evaluator
   def initialize(instructions, wires = {})
     @instructions = instructions
-    @wires = wires
+    @wires = wires.dup
   end
 
-  def evaluate(node)
-    case node
-    in Integer then node
-    in Variable(name:) then get_or_eval(name)
-    in Unary(op:, operand:) then evaluate_unary(op, evaluate(operand))
-    in Binary(op:, lhs:, rhs:) then evaluate_binary(op, evaluate(lhs), evaluate(rhs))
-    else raise "Unknown node: #{node.inspect}"
-    end
+  def signal(name)
+    evaluate(Wire.new(name))
   end
 
   private
 
-  def get_or_eval(name)
+  def evaluate(node)
+    case node
+    in Integer then node
+    in Wire(name:) then wire(name)
+    in Unary(op:, operand:) then ~evaluate(operand) & MASK
+    in Binary(op:, lhs:, rhs:) then binary(op, evaluate(lhs), evaluate(rhs))
+    else raise "Unknown node: #{node.inspect}"
+    end
+  end
+
+  def wire(name)
     @wires.fetch(name) { @wires[name] = evaluate(@instructions.fetch(name)) }
   end
 
-  def evaluate_binary(op, lhs, rhs)
+  def binary(op, lhs, rhs)
     case op
     when :and then lhs & rhs
     when :or then lhs | rhs
@@ -65,16 +69,12 @@ class Evaluator
     else raise "Unknown binary operation: #{op}"
     end
   end
-
-  def evaluate_unary(op, operand)
-    raise "Unknown unary operation: #{op}" unless op == :not
-
-    ~operand & MASK
-  end
 end
 
-def part1 = Evaluator.new(instructions).evaluate(WIRE_A)
-def part2 = Evaluator.new(instructions, b: part1).evaluate(WIRE_A)
+def instructions = @instructions ||= input.lines(chomp: true).to_h { parse(it) }
+
+def part1 = Evaluator.new(instructions).signal(:a)
+def part2 = Evaluator.new(instructions, b: part1).signal(:a)
 
 example <<~INPUT, part1: 114, part2: 28
   123 -> x
