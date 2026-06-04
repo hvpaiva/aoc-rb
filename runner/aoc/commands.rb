@@ -20,7 +20,7 @@ module AOC
 
     README_OVERVIEW_START = "<!-- aoc-overview -->"
     README_OVERVIEW_END = "<!-- /aoc-overview -->"
-    README_OVERVIEW_ENV = {"COLUMNS" => "100"}.freeze
+    README_OVERVIEW_ENV = {"COLUMNS" => "100", "AOC_TEXT_STARS" => "1"}.freeze
 
     module_function
 

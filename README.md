@@ -68,6 +68,7 @@ Inputs are cached under `inputs/`. Cached inputs are reused locally and do not t
 Optional environment variables:
 
 - `AOC_ASCII=1` swaps the emoji icons for plain ASCII (`*`, `!`, `>`, ...). Useful for terminals without Unicode glyphs.
+- `AOC_TEXT_STARS=1` swaps the overview's emoji stars for text stars (`★`/`☆`).
 - `AOC_DEBUG=1` prints the full backtrace when a solution raises instead of the first 5 lines.
 - `AOC_CONFIG_DIR` overrides the default config directory (`~/.config/aoc-rb`).
 

@@ -317,6 +317,23 @@ class SnapshotsTest < Minitest::Test
     OUT
   end
 
+  def test_text_stars_overview_grid
+    output = StringIO.new
+    overview = [[2015, [true, true, false]]]
+
+    AOC::UI::Renderer.new(output: output, env: {"NO_COLOR" => "1", "AOC_TEXT_STARS" => "1"})
+      .print_overview(overview)
+
+    assert_equal <<~OUT, output.string
+      🎄 Ruby Advent of Code
+
+      2015
+        ★★☆
+
+      ★ 2 stars · ☆ 1 missing · 3 total
+    OUT
+  end
+
   def test_unicode_overview_uses_star_glyphs
     output = StringIO.new
     overview = [[2024, [true, false]]]

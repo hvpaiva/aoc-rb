@@ -82,6 +82,8 @@ class CommandsTest < Minitest::Test
       assert_includes content, "# Title"
       assert_includes content, "Tail."
       assert_includes content, "524 total"
+      assert_includes content, "★"
+      refute_includes content, "⭐"
       refute_includes content, "stale"
     end
   end

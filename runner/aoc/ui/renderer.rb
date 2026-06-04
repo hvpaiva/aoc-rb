@@ -9,14 +9,15 @@ module AOC
     # individual render methods stay parameter-free for callers.
     #
     # Honors the same display knobs as {Ansi}: `NO_COLOR` and `TERM=dumb`
-    # disable colors, `AOC_ASCII` switches to ASCII icons, and `AOC_DEBUG`
+    # disable colors, `AOC_ASCII` switches to ASCII icons, `AOC_TEXT_STARS`
+    # swaps the overview's emoji stars for text stars (★/☆), and `AOC_DEBUG`
     # makes {print_backtrace} emit the full backtrace instead of the first
     # 5 lines.
     class Renderer
       MAX_OVERVIEW_COLUMNS = 4
       OVERVIEW_COLUMN_GAP = 4
-      OVERVIEW_CELL_WIDTH_UNICODE = 22
-      OVERVIEW_CELL_WIDTH_ASCII = 12
+      OVERVIEW_CELL_WIDTH_WIDE = 22
+      OVERVIEW_CELL_WIDTH_NARROW = 12
       DEFAULT_TERMINAL_WIDTH = 80
       MAX_BACKTRACE_LINES = 5
 
@@ -234,10 +235,9 @@ module AOC
       end
 
       def print_all_footer(stars, missing, total)
-        star = yellow(icon(:star))
-        empty_star = dim(icon(:empty_star))
+        filled, empty = star_glyphs
 
-        puts "#{star} #{stars} stars · #{empty_star} #{missing} missing · #{total} total"
+        puts "#{yellow(filled)} #{stars} stars · #{dim(empty)} #{missing} missing · #{total} total"
       end
 
       def print_overview_grid(overview)
@@ -275,10 +275,21 @@ module AOC
       end
 
       def overview_star(done)
-        return yellow(icon(:star)) if done
+        filled, empty = star_glyphs
+        return yellow(filled) if done
 
-        star = dim(icon(:empty_star))
-        @env["AOC_ASCII"] ? star : "#{star} "
+        star = dim(empty)
+        narrow_stars? ? star : "#{star} "
+      end
+
+      def star_glyphs
+        return %w[★ ☆] if @env["AOC_TEXT_STARS"]
+
+        [icon(:star), icon(:empty_star)]
+      end
+
+      def narrow_stars?
+        !!(@env["AOC_ASCII"] || @env["AOC_TEXT_STARS"])
       end
 
       def pad_overview_cell(text)
@@ -286,7 +297,7 @@ module AOC
       end
 
       def overview_cell_width
-        @env["AOC_ASCII"] ? OVERVIEW_CELL_WIDTH_ASCII : OVERVIEW_CELL_WIDTH_UNICODE
+        narrow_stars? ? OVERVIEW_CELL_WIDTH_NARROW : OVERVIEW_CELL_WIDTH_WIDE
       end
 
       # Approximates terminal column width: strips ANSI escapes and treats the
