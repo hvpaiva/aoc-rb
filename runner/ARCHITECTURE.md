@@ -108,7 +108,7 @@ Tests work around `Object` pollution by removing `part1`/`part2` in `teardown`.
 
 ## Two render paths
 
-Both paths produce human-readable output to a terminal. The difference is *who renders*: the child process (`run!`) or the parent process via aggregation (`run_all_day!`). The renderer is `AOC::UI::Renderer` in both cases.
+The difference between the paths is *who renders*: the child process (`run!`) or the parent process via aggregation (`run_all_day!`). The renderer is `AOC::UI::Renderer` in both cases.
 
 ### Direct render: `run!`
 
@@ -121,7 +121,7 @@ Used by `ruby 2024/02.rb` and `rake 2024:02`. The child process renders directly
 
 ### Aggregated render: `run_all_day!` (`AOC_EMIT=protocol`)
 
-Used by `rake all[YYYY]`. The parent (`Commands.run_year`) spawns one Ruby subprocess per existing day file. The children do not render: they emit machine-parseable lines that the parent collects, then the parent renders the aggregated table.
+Used by `rake all[YYYY]`. The parent (`Commands.run_year`) spawns one Ruby subprocess per existing day file. The children do not render: they emit protocol lines that the parent collects, then the parent renders the aggregated table.
 
 Each child emits via `AllResultProtocol.emit(@output, Result.new(...))`:
 
@@ -130,8 +130,6 @@ AOC_ALL_RESULT {"day":2,"part":1,"answer":"cba","elapsed":0.125,"variant":null}
 ```
 
 `variant` carries the originating file's slug (or null for the canonical file); it defaults to nil so the year-run path and existing callers ignore it, while comparison mode keys its table on it. The parent calls `AllResultProtocol.parse(stdout)` to recover an array of `Result` Data objects, then renders them via `Renderer#print_year_results` (year run) or `Renderer#print_day_comparison` (comparison). The `answer` field carries the raw string (`answer.to_s`); display formatting (`inspect`, truncation) happens at render time, not in the protocol.
-
-The protocol exists only as a child/parent boundary. The user sees the same human-readable style as `run!`, just produced from a different process.
 
 ## Error contract
 
