@@ -2,10 +2,22 @@
 
 module AOC
   module Calendar
+    # Puzzles unlock one per day of December at midnight US-Eastern.
+    AOC_UTC_OFFSET = "-05:00"
+
     module_function
 
     def max_day_for(year)
       (Integer(year) >= 2025) ? 12 : 25
+    end
+
+    def released_days(year, now: Time.now)
+      aoc_now = now.getlocal(AOC_UTC_OFFSET)
+
+      return max_day_for(year) if aoc_now.year > year
+      return 0 if aoc_now.year < year || aoc_now.month < 12
+
+      [aoc_now.day, max_day_for(year)].min
     end
 
     def normalize_year_day!(year, day)

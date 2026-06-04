@@ -23,8 +23,8 @@ module AOC
       end
     end
 
-    def year_stars(year, paths: Paths.default)
-      (1..Calendar.max_day_for(year)).flat_map do |day|
+    def year_stars(year, paths: Paths.default, days: Calendar.max_day_for(year))
+      (1..days).flat_map do |day|
         path = paths.day_path(year, day)
         path.exist? ? day_stars(path) : [false, false]
       end

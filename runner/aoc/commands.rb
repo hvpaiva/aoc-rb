@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "date"
 require "open3"
 require "rbconfig"
 
@@ -70,9 +69,13 @@ module AOC
       end
     end
 
-    def overview(paths: Paths.default, renderer: UI::Renderer.new)
-      years = (2015..Date.today.year).to_a
-      overview = years.map { |year| [year, SolutionStatus.year_stars(year, paths: paths)] }
+    def overview(paths: Paths.default, renderer: UI::Renderer.new, now: Time.now)
+      overview = (2015..now.year).filter_map do |year|
+        released = Calendar.released_days(year, now: now)
+        next if released.zero?
+
+        [year, SolutionStatus.year_stars(year, paths: paths, days: released)]
+      end
 
       renderer.print_overview(overview)
     end

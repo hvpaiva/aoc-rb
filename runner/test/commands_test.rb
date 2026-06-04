@@ -32,6 +32,33 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_overview_hides_current_year_before_december
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+
+      stdout, = capture_io do
+        AOC::Commands.overview(paths: paths, now: Time.utc(2026, 6, 4))
+      end
+
+      assert_includes stdout, "2025"
+      refute_includes stdout, "2026"
+      assert_includes stdout, "524 total"
+    end
+  end
+
+  def test_overview_counts_only_released_days_of_current_december
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+
+      stdout, = capture_io do
+        AOC::Commands.overview(paths: paths, now: Time.utc(2026, 12, 2, 12))
+      end
+
+      assert_includes stdout, "2026"
+      assert_includes stdout, "528 total"
+    end
+  end
+
   def test_all_with_year_runs_that_year
     Dir.mktmpdir do |dir|
       paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
