@@ -184,7 +184,7 @@ module AOC
     end
 
     def run_all_day(path, process_runner: Open3.method(:capture3), output: $stdout, error: $stderr)
-      stdout, stderr, status = process_runner.call({"AOC_RUN_MODE" => "all"}, RbConfig.ruby, path.to_s)
+      stdout, stderr, status = process_runner.call({"AOC_EMIT" => "protocol"}, RbConfig.ruby, path.to_s)
 
       unless status.success?
         output.write(stdout)
@@ -198,7 +198,7 @@ module AOC
     # Like {#run_all_day} but returns `[results, ok]` instead of raising on a
     # failed subprocess, so the comparison can mark a variant and keep going.
     def run_all_day_capturing(path, process_runner: Open3.method(:capture3))
-      stdout, _stderr, status = process_runner.call({"AOC_RUN_MODE" => "all"}, RbConfig.ruby, path.to_s)
+      stdout, _stderr, status = process_runner.call({"AOC_EMIT" => "protocol"}, RbConfig.ruby, path.to_s)
 
       [AllResultProtocol.parse(stdout), status.success?]
     end

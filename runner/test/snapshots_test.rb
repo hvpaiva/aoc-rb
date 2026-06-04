@@ -30,7 +30,7 @@ class SnapshotsTest < Minitest::Test
 
   # -------------------------------------------------------------------- ASCII
 
-  def test_ascii_full_human_run
+  def test_ascii_full_run
     Object.class_eval do
       def part1 = input.chomp.upcase
       def part2 = input.chomp.length
@@ -292,7 +292,7 @@ class SnapshotsTest < Minitest::Test
 
   # ------------------------------------------------------------------ Unicode
 
-  def test_unicode_human_run_uses_emoji_icons
+  def test_unicode_run_uses_emoji_icons
     Object.class_eval { def part1 = input.chomp.upcase }
     AOC::DSL.add_example("abc\n", part1: "ABC")
 

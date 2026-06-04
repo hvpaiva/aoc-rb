@@ -3,7 +3,7 @@
 require "json"
 
 module AOC
-  # Wire protocol between a day file running in AOC_RUN_MODE=all and the
+  # Wire protocol between a day file running with AOC_EMIT=protocol and the
   # parent process that aggregates results (AOC::Commands.run_year).
   #
   # The child emits one MARKER-prefixed JSON line per solved part on stdout;

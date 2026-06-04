@@ -21,8 +21,8 @@ runner/
     ui/renderer.rb            # Stateful Renderer class: holds output + env, public render API.
     solution_status.rb        # Detect which parts are implemented (Prism-based for source paths).
     scaffolder.rb             # Generates day files from a template.
-    runner.rb                 # Solves parts: examples + real input, or all-mode JSON emission.
-    all_result_protocol.rb    # MARKER + Data.define Result (incl. variant) + emit/parse for AOC_RUN_MODE=all.
+    runner.rb                 # Solves parts: examples + real input, or protocol emission.
+    all_result_protocol.rb    # MARKER + Data.define Result (incl. variant) + emit/parse for AOC_EMIT=protocol.
     commands.rb               # Public Rake-facing commands: help, new_day, run_day, all, run_day_comparison, check (solutions), ci, runner_check, lint_runner, test.
     boot.rb                   # Installs DSL and registers the at_exit auto-runner for day files.
   test/
@@ -73,7 +73,7 @@ Slugs are created as `NN_<slug>.rb` with `slug` matching `/\A[a-z0-9]+\z/`; `bas
 
 ### Comparison mode: `rake 'all[YYYY,DD]'`
 
-`Commands.all` progresses by arity: no args → overview; one arg → year; two args → `run_day_comparison`. Comparison runs the canonical file and every variant of one day against the real input only (no examples), in `AOC_RUN_MODE=all` subprocesses, and renders a per-variant table (one star line per row, mirroring the year table but with a variant-label column). It flags any part whose answer differs across variants.
+`Commands.all` progresses by arity: no args → overview; one arg → year; two args → `run_day_comparison`. Comparison runs the canonical file and every variant of one day against the real input only (no examples), in `AOC_EMIT=protocol` subprocesses, and renders a per-variant table (one star line per row, mirroring the year table but with a variant-label column). It flags any part whose answer differs across variants.
 
 Comparison is the one aggregation path that must tolerate a failing file: `run_day_comparison` uses `run_all_day_capturing`, which returns `[results, ok]` instead of raising on a non-zero subprocess (unlike `run_all_day`, used by `run_year`, which raises `CommandFailed` on the first failure). A failing variant is marked errored and its siblings still run. Comparison is a Rake-only concept; `ruby <file>` is always a focused single-file run.
 
@@ -102,7 +102,7 @@ Tests work around `Object` pollution by removing `part1`/`part2` in `teardown`.
 5. `Boot.install_auto_runner` checks if `$PROGRAM_NAME` is a day file. If yes, it registers an `at_exit` block (once per process).
 6. Day file body executes: defines `part1`/`part2`, records `example` declarations.
 7. Ruby fires the registered `at_exit`. `failure: -> { $! }` is evaluated lazily: if the process is unwinding from an unhandled exception, the lambda returns the exception, the `at_exit` block returns early via `next`, and the original error preserves its exit semantics.
-8. Otherwise the block instantiates `Runner` and calls `run!` (human output) or `run_all_day!` (when `AOC_RUN_MODE=all`).
+8. Otherwise the block instantiates `Runner` and calls `run!` (direct render) or `run_all_day!` (when `AOC_EMIT=protocol`).
 
 `Boot.reset!` is exposed for tests that want to verify the install-once behavior.
 
@@ -119,7 +119,7 @@ Used by `ruby 2024/02.rb` and `rake 2024:02`. The child process renders directly
 3. `run_examples!` iterates declared examples, calling `solve(part, example.input)` for each expected `(part, value)` pair. A mismatch marks the run as failed but the remaining examples still execute; an exception aborts immediately via `catch(:stop)` / `throw :stop`. Either way it returns false.
 4. When all examples passed, `run_real_input!` reads the cached input (or downloads it), solves each available part, and prints aligned results. Otherwise the runner prints `Stopped before real input.` and exits non-zero.
 
-### Aggregated render: `run_all_day!` (`AOC_RUN_MODE=all`)
+### Aggregated render: `run_all_day!` (`AOC_EMIT=protocol`)
 
 Used by `rake all[YYYY]`. The parent (`Commands.run_year`) spawns one Ruby subprocess per existing day file. The children do not render: they emit machine-parseable lines that the parent collects, then the parent renders the aggregated table.
 

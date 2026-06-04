@@ -51,8 +51,8 @@ class BootTest < Minitest::Test
     assert_equal [:run], calls
   end
 
-  def test_install_registers_day_file_at_exit_for_all_mode
-    calls = with_stubbed_day_file_boot(env: {"AOC_RUN_MODE" => "all"}) do |block, calls|
+  def test_install_registers_day_file_at_exit_for_protocol_emission
+    calls = with_stubbed_day_file_boot(env: {"AOC_EMIT" => "protocol"}) do |block, calls|
       block.call
       calls
     end

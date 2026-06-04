@@ -441,7 +441,7 @@ class CommandsTest < Minitest::Test
     end
   end
 
-  def test_all_mode_outputs_machine_readable_results
+  def test_protocol_emission_outputs_parseable_results
     with_project do |root|
       write_file(root.join("2024", "02.rb"), <<~RUBY)
         # frozen_string_literal: true
@@ -455,7 +455,7 @@ class CommandsTest < Minitest::Test
       write_file(root.join("inputs", "2024", "02.txt"), "abcd\n")
 
       stdout, stderr, status = run_ruby(root, "2024/02.rb",
-        env: {"AOC_RUN_MODE" => "all", "AOC_ASCII" => "1", "NO_COLOR" => "1"})
+        env: {"AOC_EMIT" => "protocol", "AOC_ASCII" => "1", "NO_COLOR" => "1"})
 
       assert status.success?, stderr
       assert_includes stdout, "AOC_ALL_RESULT"

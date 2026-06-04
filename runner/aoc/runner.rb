@@ -3,8 +3,8 @@
 module AOC
   # Drives the execution of a day file: infers year/day from the file path,
   # checks which parts are defined, runs declared examples, and then solves
-  # against the real input. Also supports a machine-readable mode used by
-  # `rake all[YYYY]` via {AllResultProtocol}.
+  # against the real input. Can also emit results in the {AllResultProtocol}
+  # wire format for the parent process that aggregates `rake all[YYYY]` runs.
   class Runner
     class InvalidPartSignatureError < AOC::UserError; end
 
@@ -12,7 +12,7 @@ module AOC
     # @param input_store [InputStore] resolves cached input or downloads it.
     # @param ui [UI::Renderer] anything implementing the renderer surface
     #   (`title`, `examples_header`, `real_results`, etc.).
-    # @param output [IO] machine-mode emission target.
+    # @param output [IO] protocol emission target.
     # @param clock [#call] zero-argument callable returning a monotonic
     #   time value for elapsed measurements.
     # @param exiter [#call] one-argument callable used to exit on failure
@@ -33,8 +33,8 @@ module AOC
       @exiter = exiter
     end
 
-    # Human mode: runs examples first, then the real input, rendering each
-    # outcome through the renderer.
+    # Direct render: runs examples first, then the real input, rendering
+    # each outcome through the renderer.
     #
     # @param path [String] path of the day file (defaults to
     #   `$PROGRAM_NAME`, the path under which the script was invoked).
@@ -63,8 +63,9 @@ module AOC
       @exiter.call(false)
     end
 
-    # Machine mode: emits one {AllResultProtocol::Result} per part on
-    # `@output`. Invoked when `AOC_RUN_MODE=all` is set.
+    # Protocol emission: emits one {AllResultProtocol::Result} per part on
+    # `@output` for the parent process to aggregate. Invoked when
+    # `AOC_EMIT=protocol` is set.
     #
     # @param path [String] path of the day file.
     # @return [void]
