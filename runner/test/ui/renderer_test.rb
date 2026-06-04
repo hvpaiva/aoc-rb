@@ -101,6 +101,54 @@ class RendererTest < Minitest::Test
     assert_includes output.string, "2019"
   end
 
+  def test_print_overview_drops_columns_on_narrow_output
+    output = StringIO.new
+    env = {"AOC_ASCII" => "1", "NO_COLOR" => "1", "COLUMNS" => "40"}
+    overview = (2015..2018).map { |year| [year, Array.new(2, false)] }
+
+    AOC::UI::Renderer.new(output: output, env: env).print_overview(overview)
+
+    first_line = output.string.lines.find { |line| line.include?("2015") }
+    assert_includes first_line, "2016"
+    refute_includes first_line, "2017"
+  end
+
+  def test_print_overview_falls_back_to_single_column
+    output = StringIO.new
+    env = {"AOC_ASCII" => "1", "NO_COLOR" => "1", "COLUMNS" => "5"}
+    overview = (2015..2016).map { |year| [year, Array.new(2, false)] }
+
+    AOC::UI::Renderer.new(output: output, env: env).print_overview(overview)
+
+    first_line = output.string.lines.find { |line| line.include?("2015") }
+    refute_includes first_line, "2016"
+  end
+
+  def test_print_overview_uses_terminal_width_on_tty
+    output = StringIO.new
+    output.define_singleton_method(:tty?) { true }
+    output.define_singleton_method(:winsize) { [24, 30] }
+    env = {"AOC_ASCII" => "1", "NO_COLOR" => "1", "TERM" => "dumb"}
+    overview = (2015..2018).map { |year| [year, Array.new(2, false)] }
+
+    AOC::UI::Renderer.new(output: output, env: env).print_overview(overview)
+
+    first_line = output.string.lines.find { |line| line.include?("2015") }
+    assert_includes first_line, "2016"
+    refute_includes first_line, "2017"
+  end
+
+  def test_print_overview_ignores_malformed_columns_value
+    output = StringIO.new
+    env = {"AOC_ASCII" => "1", "NO_COLOR" => "1", "COLUMNS" => "wide"}
+    overview = (2015..2018).map { |year| [year, Array.new(2, false)] }
+
+    AOC::UI::Renderer.new(output: output, env: env).print_overview(overview)
+
+    first_line = output.string.lines.find { |line| line.include?("2015") }
+    assert_includes first_line, "2018"
+  end
+
   def test_print_overview_aligns_cards_with_heterogeneous_heights
     # Real production scenario: rake all renders 2024 (25 stars / 3 rows)
     # alongside 2025+ (12 stars / 2 rows) in the same slice-of-4 row. The

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "io/console"
+
 module AOC
   module UI
     # Renders runner output to a stream. The only stateful piece of the UI
@@ -11,9 +13,11 @@ module AOC
     # makes {print_backtrace} emit the full backtrace instead of the first
     # 5 lines.
     class Renderer
-      OVERVIEW_COLUMNS = 4
+      MAX_OVERVIEW_COLUMNS = 4
+      OVERVIEW_COLUMN_GAP = 4
       OVERVIEW_CELL_WIDTH_UNICODE = 22
       OVERVIEW_CELL_WIDTH_ASCII = 12
+      DEFAULT_TERMINAL_WIDTH = 80
       MAX_BACKTRACE_LINES = 5
 
       # @param output [IO] target stream (defaults to `$stdout`).
@@ -237,16 +241,29 @@ module AOC
       end
 
       def print_overview_grid(overview)
-        overview.each_slice(OVERVIEW_COLUMNS) do |row|
+        overview.each_slice(overview_columns) do |row|
           cards = row.map { |year, stars| overview_card(year, stars) }
           height = cards.map(&:length).max
 
           height.times do |line_index|
-            puts cards.map { |card| pad_overview_cell(card[line_index] || "") }.join("    ").rstrip
+            puts cards.map { |card| pad_overview_cell(card[line_index] || "") }.join(" " * OVERVIEW_COLUMN_GAP).rstrip
           end
 
           puts
         end
+      end
+
+      def overview_columns
+        width = terminal_width
+        cell = overview_cell_width
+
+        MAX_OVERVIEW_COLUMNS.downto(1).find { |count| (count * cell) + ((count - 1) * OVERVIEW_COLUMN_GAP) <= width } || 1
+      end
+
+      def terminal_width
+        return @output.winsize[1] if @output.respond_to?(:winsize) && @output.tty?
+
+        Integer(@env["COLUMNS"], exception: false) || DEFAULT_TERMINAL_WIDTH
       end
 
       def overview_card(year, stars)
