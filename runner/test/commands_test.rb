@@ -59,6 +59,46 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_update_readme_replaces_overview_section
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+      readme = File.join(dir, "README.md")
+      File.write(readme, <<~MD)
+        # Title
+
+        <!-- aoc-overview -->
+        stale
+        <!-- /aoc-overview -->
+
+        Tail.
+      MD
+
+      stdout, = capture_io do
+        AOC::Commands.update_readme(paths: paths, now: Time.utc(2026, 6, 4))
+      end
+
+      content = File.read(readme)
+      assert_includes stdout, "Updated: README.md"
+      assert_includes content, "# Title"
+      assert_includes content, "Tail."
+      assert_includes content, "524 total"
+      refute_includes content, "stale"
+    end
+  end
+
+  def test_update_readme_requires_markers
+    Dir.mktmpdir do |dir|
+      paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))
+      File.write(File.join(dir, "README.md"), "# Title\n")
+
+      error = assert_raises(AOC::UserError) do
+        AOC::Commands.update_readme(paths: paths)
+      end
+
+      assert_equal "README.md is missing the overview markers.", error.message
+    end
+  end
+
   def test_all_with_year_runs_that_year
     Dir.mktmpdir do |dir|
       paths = AOC::Paths.new(root: dir, config_dir: File.join(dir, "config"))

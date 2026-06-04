@@ -387,6 +387,7 @@ class SnapshotsTest < Minitest::Test
         rake 'all[2024,2]'         # compare a day's variants on real input
         rake check                 # lint the solutions (Standard study aid)
         rake ci                    # full gate: runner checks + solution lint
+        rake readme                # refresh the stars overview in README.md
 
       Runner (the tool) maintenance:
         rake runner:test           # run the runner test suite

@@ -2,6 +2,7 @@
 
 require "open3"
 require "rbconfig"
+require "stringio"
 
 module AOC
   module Commands
@@ -17,6 +18,10 @@ module AOC
     # Files included in `rake runner:test`.
     TEST_FILE_GLOB = "runner/test/**/*_test.rb"
 
+    README_OVERVIEW_START = "<!-- aoc-overview -->"
+    README_OVERVIEW_END = "<!-- /aoc-overview -->"
+    README_OVERVIEW_ENV = {"COLUMNS" => "100"}.freeze
+
     module_function
 
     def help
@@ -31,6 +36,7 @@ module AOC
           rake 'all[2024,2]'         # compare a day's variants on real input
           rake check                 # lint the solutions (Standard study aid)
           rake ci                    # full gate: runner checks + solution lint
+          rake readme                # refresh the stars overview in README.md
 
         Runner (the tool) maintenance:
           rake runner:test           # run the runner test suite
@@ -78,6 +84,19 @@ module AOC
       end
 
       renderer.print_overview(overview)
+    end
+
+    def update_readme(paths: Paths.default, now: Time.now, output: $stdout)
+      readme = paths.root.join("README.md")
+      grid = StringIO.new
+      overview(paths: paths, renderer: UI::Renderer.new(output: grid, env: README_OVERVIEW_ENV), now: now)
+
+      before, rest = readme.read.split(README_OVERVIEW_START, 2)
+      _, after = rest&.split(README_OVERVIEW_END, 2)
+      raise UserError, "README.md is missing the overview markers." if after.nil?
+
+      readme.write("#{before}#{README_OVERVIEW_START}\n```\n#{grid.string}```\n#{README_OVERVIEW_END}#{after}")
+      output.puts "Updated: README.md"
     end
 
     def run_year(year, paths: Paths.default, renderer: UI::Renderer.new)

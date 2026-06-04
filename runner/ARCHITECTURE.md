@@ -23,7 +23,7 @@ runner/
     scaffolder.rb             # Generates day files from a template.
     runner.rb                 # Solves parts: examples + real input, or protocol emission.
     all_result_protocol.rb    # MARKER + Data.define Result (incl. variant) + emit/parse for AOC_EMIT=protocol.
-    commands.rb               # Public Rake-facing commands: help, new_day, run_day, all, run_day_comparison, check (solutions), ci, runner_check, lint_runner, test.
+    commands.rb               # Public Rake-facing commands: help, new_day, run_day, all, run_day_comparison, update_readme, check (solutions), ci, runner_check, lint_runner, test.
     boot.rb                   # Installs DSL and registers the at_exit auto-runner for day files.
   test/
     test_helper.rb            # Loads aoc.rb and support/fakes.rb. Defines RunnerTestSupport helpers.

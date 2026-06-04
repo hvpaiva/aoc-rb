@@ -26,6 +26,10 @@ task :ci do
   run_aoc { AOC::Commands.ci }
 end
 
+task :readme do
+  run_aoc { AOC::Commands.update_readme }
+end
+
 namespace :runner do
   task :lint do
     run_aoc { AOC::Commands.lint_runner }

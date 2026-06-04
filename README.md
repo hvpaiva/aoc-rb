@@ -4,6 +4,13 @@ Solutions for [Advent of Code](https://adventofcode.com/) challenges in Ruby.
 
 Solutions live in year/day files, such as `2024/02.rb`. The runner in `runner/` is an internal support tool: it creates day files, downloads/caches inputs, runs examples before real input, and executes solutions through `ruby` or `rake`.
 
+## Stars
+
+Updated by CI on every push to `main` (`rake readme`).
+
+<!-- aoc-overview -->
+<!-- /aoc-overview -->
+
 ## Setup
 
 Requires Ruby 4.0+. The checked-in `.ruby-version` pins the local development version.
