@@ -13,6 +13,7 @@ module AOC
     # @param ui [UI::Renderer] anything implementing the renderer surface
     #   (`title`, `examples_header`, `real_results`, etc.).
     # @param output [IO] protocol emission target.
+    # @param env [Hash, ENV] environment hash used to resolve `AOC_FORCE_REAL`.
     # @param clock [#call] zero-argument callable returning a monotonic
     #   time value for elapsed measurements.
     # @param exiter [#call] one-argument callable used to exit on failure
@@ -22,6 +23,7 @@ module AOC
       input_store: InputStore.new(paths: paths),
       ui: UI::Renderer.new,
       output: $stdout,
+      env: ENV,
       clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) },
       exiter: Kernel.method(:exit)
     )
@@ -29,12 +31,15 @@ module AOC
       @input_store = input_store
       @ui = ui
       @output = output
+      @env = env
       @clock = clock
       @exiter = exiter
     end
 
     # Direct render: runs examples first, then the real input, rendering
-    # each outcome through the renderer.
+    # each outcome through the renderer. While any example carries `skip:`
+    # or `only:`, the real input is withheld (still exiting zero) unless
+    # `AOC_FORCE_REAL` is set.
     #
     # @param path [String] path of the day file (defaults to
     #   `$PROGRAM_NAME`, the path under which the script was invoked).
@@ -51,10 +56,12 @@ module AOC
         return
       end
 
-      if run_examples!(parts)
-        run_real_input!(year, day, parts)
-      else
+      if !run_examples!(parts)
         @exiter.call(false)
+      elsif examples_flagged? && !@env["AOC_FORCE_REAL"]
+        @ui.real_skipped
+      else
+        run_real_input!(year, day, parts)
       end
     rescue SystemExit
       raise
@@ -96,17 +103,28 @@ module AOC
     # never hides the others. An exception aborts immediately: it is a
     # structural bug, not a wrong answer, and would likely repeat.
     #
-    # @return [Boolean] true when all examples passed (or none declared).
+    # Examples marked `skip:` do not run; when any example carries `only:`,
+    # the unmarked ones do not run either.
+    #
+    # @return [Boolean] true when all selected examples passed (or none
+    #   declared).
     def run_examples!(parts)
       return true if DSL.examples.empty?
 
       @ui.examples_header
 
+      focused = DSL.examples.any?(&:only)
       passed = true
+      flagged = 0
       skipped = Hash.new(0)
 
       catch(:stop) do
         DSL.examples.each_with_index do |example, index|
+          if example.skip || (focused && !example.only)
+            flagged += 1
+            next
+          end
+
           label = example.name || "example #{format("%2d", index + 1)}"
 
           example.expected.each do |part, expected|
@@ -131,6 +149,7 @@ module AOC
         end
       end
 
+      @ui.examples_flag_skipped(flagged) if flagged.positive?
       skipped.sort.each { |part, count| @ui.examples_skipped(part, count) }
 
       @ui.examples_stopped unless passed
@@ -194,6 +213,10 @@ module AOC
     end
 
     private
+
+    def examples_flagged?
+      DSL.examples.any? { |example| example.skip || example.only }
+    end
 
     def monotonic_time
       @clock.call

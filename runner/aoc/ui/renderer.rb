@@ -77,12 +77,22 @@ module AOC
         puts red("Stopped before real input.")
       end
 
+      def examples_flag_skipped(count)
+        noun = (count == 1) ? "example" : "examples"
+        puts "  #{yellow(icon(:skip))} #{count} #{noun} skipped  #{dim("(skip:/only:)")}"
+      end
+
       def examples_skipped(part, count)
         noun = (count == 1) ? "example" : "examples"
-        puts "  #{yellow(icon(:skip))} #{count} #{noun} skipped  #{dim("(def part#{part} not defined)")}"
+        puts "  #{yellow(icon(:skip))} #{part_title(part)} · skipped in #{count} #{noun}  #{dim("(no def part#{part})")}"
       end
 
       # ----- real input outcomes -------------------------------------------
+
+      def real_skipped
+        puts
+        puts "#{yellow("Real input skipped while examples carry skip:/only: flags.")}  #{dim("(AOC_FORCE_REAL=1 runs it anyway)")}"
+      end
 
       def real_results(results)
         answer_width = results.map { |_, answer, _| value(answer).length }.max || 0

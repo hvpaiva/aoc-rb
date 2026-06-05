@@ -70,6 +70,7 @@ Optional environment variables:
 - `AOC_ASCII=1` swaps the emoji icons for plain ASCII (`*`, `!`, `>`, ...). Useful for terminals without Unicode glyphs.
 - `AOC_TEXT_STARS=1` swaps the overview's emoji stars for text stars (`★`/`☆`).
 - `AOC_DEBUG=1` prints the full backtrace when a solution raises instead of the first 5 lines.
+- `AOC_FORCE_REAL=1` runs the real input even while examples carry `skip:`/`only:` flags.
 - `AOC_CONFIG_DIR` overrides the default config directory (`~/.config/aoc-rb`).
 
 ## Create a day
@@ -181,6 +182,15 @@ INPUT
 ```
 
 Do not define `part2` before starting Part 2.
+
+Examples accept `skip:` and `only:` flags (combining both on the same example is an error):
+
+```ruby
+example "abc", part1: 3, skip: true   # declared but not run
+example "xyz", part1: 3, only: true   # when present, only flagged examples run
+```
+
+While any example carries a flag, the real input does not run and the process still exits zero; remove the flags to see the answer again. `AOC_FORCE_REAL=1` runs the real input anyway.
 
 ## Runner structure
 

@@ -155,8 +155,113 @@ class RunnerTest < Minitest::Test
       AOC::Runner.new.run_examples!([1])
     end
 
-    assert_includes stdout, "2 examples skipped"
-    assert_includes stdout, "(def part2 not defined)"
+    assert_includes stdout, "part 2 · skipped in 2 examples"
+    assert_includes stdout, "(no def part2)"
+  end
+
+  def test_run_examples_excludes_skip_flagged_example
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part1: 99, skip: true)
+    AOC::DSL.add_example("xyz", part1: 3)
+
+    passed = nil
+    stdout, = capture_io do
+      passed = AOC::Runner.new.run_examples!([1])
+    end
+
+    assert passed
+    assert_includes stdout, "1 example skipped"
+    assert_includes stdout, "(skip:/only:)"
+    refute_includes stdout, "expected: 99"
+  end
+
+  def test_run_examples_only_flag_excludes_unmarked_examples
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part1: 99)
+    AOC::DSL.add_example("wxyz", part1: 4, only: true)
+
+    passed = nil
+    stdout, = capture_io do
+      passed = AOC::Runner.new.run_examples!([1])
+    end
+
+    assert passed
+    assert_includes stdout, "example  2"
+    assert_includes stdout, "1 example skipped"
+    refute_includes stdout, "example  1"
+  end
+
+  def test_run_examples_missing_part_count_ignores_flag_skipped_examples
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part2: 0, skip: true)
+    AOC::DSL.add_example("xy", part2: 0)
+
+    stdout, = capture_io do
+      AOC::Runner.new.run_examples!([1])
+    end
+
+    assert_includes stdout, "part 2 · skipped in 1 example"
+    assert_includes stdout, "1 example skipped  (skip:/only:)"
+  end
+
+  def test_run_examples_flagged_failure_still_returns_false
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part1: 99, only: true)
+
+    passed = nil
+    stdout, = capture_io do
+      passed = AOC::Runner.new.run_examples!([1])
+    end
+
+    refute passed
+    assert_includes stdout, "Stopped before real input."
+  end
+
+  def test_run_withholds_real_input_when_examples_carry_flags
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part1: 3, only: true)
+    exits = []
+
+    stdout, = capture_io do
+      AOC::Runner.new(
+        paths: FakePaths.new(year: 2024, day: 2),
+        input_store: FakeInputStore.new("hello\n"),
+        env: {},
+        exiter: ->(success) { exits << success }
+      ).run!(path: "2024/02.rb")
+    end
+
+    assert_empty exits
+    assert_includes stdout, "Real input skipped while examples carry skip:/only: flags."
+    refute_includes stdout, "answer:"
+  end
+
+  def test_run_force_real_env_runs_real_input_despite_flags
+    Object.class_eval do
+      def part1 = input.length
+    end
+    AOC::DSL.add_example("abc", part1: 3, skip: true)
+
+    stdout, = capture_io do
+      AOC::Runner.new(
+        paths: FakePaths.new(year: 2024, day: 2),
+        input_store: FakeInputStore.new("hello\n"),
+        env: {"AOC_FORCE_REAL" => "1"}
+      ).run!(path: "2024/02.rb")
+    end
+
+    assert_includes stdout, "part 1 answer: 6"
+    refute_includes stdout, "Real input skipped while"
   end
 
   def test_run_examples_continues_past_mismatch_and_returns_false

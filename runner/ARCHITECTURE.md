@@ -56,6 +56,8 @@ INPUT
 
 `require_relative "../runner/aoc"` loads the runner and registers an `at_exit` hook. The day file then defines `part1`/`part2` at the top level and declares one or more `example` calls. After the script body finishes, the `at_exit` hook runs the solver against the examples and then the real input.
 
+An example may carry `skip: true` (do not run it) or `only: true` (run only the flagged ones); combining both on one example raises at declaration time. While any flag is present the real input is withheld, unless `AOC_FORCE_REAL=1`.
+
 The file shape is the runner's public contract. Internals can change freely; day files cannot.
 
 ## Variants and the recognition seam
@@ -116,8 +118,8 @@ Used by `ruby 2024/02.rb` and `rake 2024:02`. The child process renders directly
 
 1. `title(year, day)` header.
 2. If `available_parts` is empty: print configuration error, exit non-zero.
-3. `run_examples!` iterates declared examples, calling `solve(part, example.input)` for each expected `(part, value)` pair. A mismatch marks the run as failed but the remaining examples still execute; an exception aborts immediately via `catch(:stop)` / `throw :stop`. Either way it returns false.
-4. When all examples passed, `run_real_input!` reads the cached input (or downloads it), solves each available part, and prints aligned results. Otherwise the runner prints `Stopped before real input.` and exits non-zero.
+3. `run_examples!` iterates declared examples, calling `solve(part, example.input)` for each expected `(part, value)` pair. Examples excluded by `skip:`/`only:` flags are counted into a single grouped line, not run. A mismatch marks the run as failed but the remaining examples still execute; an exception aborts immediately via `catch(:stop)` / `throw :stop`. Either way it returns false.
+4. When all selected examples passed, `run_real_input!` reads the cached input (or downloads it), solves each available part, and prints aligned results. When any example carries a flag, the real input is skipped instead (exit zero) unless `AOC_FORCE_REAL=1`. A failed example prints `Stopped before real input.` and exits non-zero.
 
 ### Aggregated render: `run_all_day!` (`AOC_EMIT=protocol`)
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module AOC
-  Example = Data.define(:input, :expected, :name)
+  Example = Data.define(:input, :expected, :name, :skip, :only)
 
   module DSL
     UNSET = Object.new.freeze
@@ -32,8 +32,8 @@ module AOC
       end
 
       def install!(target = TOPLEVEL_BINDING.receiver)
-        target.define_singleton_method(:example) do |input, part1: UNSET, part2: UNSET, name: nil|
-          AOC::DSL.add_example(input, part1: part1, part2: part2, name: name)
+        target.define_singleton_method(:example) do |input, part1: UNSET, part2: UNSET, name: nil, skip: false, only: false|
+          AOC::DSL.add_example(input, part1: part1, part2: part2, name: name, skip: skip, only: only)
         end
 
         target.define_singleton_method(:input) do
@@ -43,14 +43,15 @@ module AOC
         target.singleton_class.send(:private, :example, :input)
       end
 
-      def add_example(input, part1: UNSET, part2: UNSET, name: nil)
+      def add_example(input, part1: UNSET, part2: UNSET, name: nil, skip: false, only: false)
         expected = {}
         expected[1] = part1 unless part1.equal?(UNSET)
         expected[2] = part2 unless part2.equal?(UNSET)
 
         raise UserError, "example requires part1: and/or part2:." if expected.empty?
+        raise UserError, "example cannot combine skip: and only:." if skip && only
 
-        examples << Example.new(input: input, expected: expected, name: name)
+        examples << Example.new(input: input, expected: expected, name: name, skip: skip, only: only)
       end
     end
   end

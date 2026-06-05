@@ -18,12 +18,30 @@ class DSLTest < Minitest::Test
     assert_equal "abc", example.input
     assert_equal({1 => 3, 2 => 4}, example.expected)
     assert_equal "sample", example.name
+    refute example.skip
+    refute example.only
   end
 
   def test_add_example_requires_at_least_one_expected_part
     error = assert_raises(AOC::UserError) { AOC::DSL.add_example("abc") }
 
     assert_equal "example requires part1: and/or part2:.", error.message
+  end
+
+  def test_add_example_rejects_skip_combined_with_only
+    error = assert_raises(AOC::UserError) do
+      AOC::DSL.add_example("abc", part1: 3, skip: true, only: true)
+    end
+
+    assert_equal "example cannot combine skip: and only:.", error.message
+  end
+
+  def test_add_example_records_skip_and_only_flags
+    AOC::DSL.add_example("abc", part1: 3, skip: true)
+    AOC::DSL.add_example("xyz", part1: 3, only: true)
+
+    assert AOC::DSL.examples.fetch(0).skip
+    assert AOC::DSL.examples.fetch(1).only
   end
 
   def test_runtime_input_raises_before_assignment
@@ -40,10 +58,11 @@ class DSLTest < Minitest::Test
     AOC::DSL.install!(target)
 
     target.instance_eval do
-      example "abc", part1: 3
+      example "abc", part1: 3, skip: true
     end
 
     assert_equal 1, AOC::DSL.examples.length
+    assert AOC::DSL.examples.fetch(0).skip
 
     error = assert_raises(AOC::DSL::InputNotReadyError) do
       target.instance_eval { input }

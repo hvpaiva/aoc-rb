@@ -108,7 +108,31 @@ class SnapshotsTest < Minitest::Test
     assert_equal <<~OUT, output.string
 
       Examples
-        > 1 example skipped  (def part2 not defined)
+        > part 2 · skipped in 1 example  (no def part2)
+    OUT
+  end
+
+  def test_ascii_flagged_examples_withhold_real_input
+    Object.class_eval { def part1 = input.chomp.upcase }
+    AOC::DSL.add_example("abc\n", part1: "ABC", only: true)
+    AOC::DSL.add_example("zzz\n", part1: "Z", skip: true)
+
+    output = StringIO.new
+    AOC::Runner.new(
+      paths: FakePaths.new(year: 2024, day: 2),
+      input_store: FakeInputStore.new("hello\n"),
+      ui: ascii_renderer(output),
+      env: {}
+    ).run!(path: "2024/02.rb")
+
+    assert_equal <<~OUT, output.string
+       Ruby Advent of Code 2024 day 02
+
+      Examples
+        * example  1 · part 1  expected = got = "ABC"
+        > 1 example skipped  (skip:/only:)
+
+      Real input skipped while examples carry skip:/only: flags.  (AOC_FORCE_REAL=1 runs it anyway)
     OUT
   end
 

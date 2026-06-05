@@ -71,6 +71,36 @@ class RendererTest < Minitest::Test
     assert_includes output.string, "Stopped before real input."
   end
 
+  def test_examples_flag_skipped_pluralizes_count
+    singular = StringIO.new
+    plural = StringIO.new
+    AOC::UI::Renderer.new(output: singular, env: {}).examples_flag_skipped(1)
+    AOC::UI::Renderer.new(output: plural, env: {}).examples_flag_skipped(3)
+
+    assert_includes singular.string, "1 example skipped"
+    assert_includes plural.string, "3 examples skipped"
+    assert_includes plural.string, "(skip:/only:)"
+  end
+
+  def test_examples_skipped_names_the_part_and_pluralizes_count
+    singular = StringIO.new
+    plural = StringIO.new
+    AOC::UI::Renderer.new(output: singular, env: {}).examples_skipped(2, 1)
+    AOC::UI::Renderer.new(output: plural, env: {}).examples_skipped(2, 4)
+
+    assert_includes singular.string, "part 2 · skipped in 1 example"
+    assert_includes plural.string, "part 2 · skipped in 4 examples"
+    assert_includes plural.string, "(no def part2)"
+  end
+
+  def test_real_skipped_prints_withheld_message_and_override_hint
+    output = StringIO.new
+    AOC::UI::Renderer.new(output: output, env: {}).real_skipped
+
+    assert_includes output.string, "Real input skipped while examples carry skip:/only: flags."
+    assert_includes output.string, "(AOC_FORCE_REAL=1 runs it anyway)"
+  end
+
   def test_print_overview_renders_grid_and_footer
     output = StringIO.new
     env = {"AOC_ASCII" => "1", "NO_COLOR" => "1"}

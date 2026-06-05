@@ -562,6 +562,52 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_direct_day_execution_withholds_real_input_with_flagged_examples
+    with_project do |root|
+      write_file(root.join("2024", "02.rb"), <<~RUBY)
+        # frozen_string_literal: true
+
+        require_relative "../runner/aoc"
+
+        example "abc", part1: 3, only: true
+        example "xyz", part1: 99
+
+        def part1 = input.chomp.length
+      RUBY
+      write_file(root.join("inputs", "2024", "02.txt"), "abcd\n")
+
+      stdout, stderr, status = run_ruby(root, "2024/02.rb", env: {"AOC_ASCII" => "1", "NO_COLOR" => "1"})
+
+      assert status.success?, stderr
+      assert_includes stdout, "expected = got = 3"
+      assert_includes stdout, "1 example skipped  (skip:/only:)"
+      assert_includes stdout, "Real input skipped while examples carry skip:/only: flags."
+      refute_includes stdout, "answer:"
+    end
+  end
+
+  def test_direct_day_execution_force_real_overrides_flags
+    with_project do |root|
+      write_file(root.join("2024", "02.rb"), <<~RUBY)
+        # frozen_string_literal: true
+
+        require_relative "../runner/aoc"
+
+        example "abc", part1: 3, skip: true
+
+        def part1 = input.chomp.length
+      RUBY
+      write_file(root.join("inputs", "2024", "02.txt"), "abcd\n")
+
+      stdout, stderr, status = run_ruby(root, "2024/02.rb",
+        env: {"AOC_FORCE_REAL" => "1", "AOC_ASCII" => "1", "NO_COLOR" => "1"})
+
+      assert status.success?, stderr
+      assert_includes stdout, "part 1 answer: 4"
+      refute_includes stdout, "Real input skipped while"
+    end
+  end
+
   def test_running_aoc_rb_directly_prints_help
     with_project do |root|
       stdout, _stderr, status = run_ruby(root, "runner/aoc.rb", env: {"AOC_ASCII" => "1", "NO_COLOR" => "1"})
