@@ -121,7 +121,7 @@ Used by `ruby 2024/02.rb` and `rake 2024:02`. The child process renders directly
 
 ### Aggregated render: `run_all_day!` (`AOC_EMIT=protocol`)
 
-Used by `rake all[YYYY]`. The parent (`Commands.run_year`) spawns one Ruby subprocess per existing day file. The children do not render: they emit protocol lines that the parent collects, then the parent renders the aggregated table.
+Used by `rake all[YYYY]`. The parent (`Commands.run_year`) first prefetches any missing inputs serially (concurrent downloads would race the throttle stamp), then spawns one Ruby subprocess per existing day file across a pool of worker threads capped at the processor count. The children do not render: they emit protocol lines that the parent collects, then the parent renders the aggregated table in file order regardless of completion order.
 
 Each child emits via `AllResultProtocol.emit(@output, Result.new(...))`:
 

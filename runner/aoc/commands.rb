@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "etc"
 require "open3"
 require "rbconfig"
 require "stringio"
@@ -99,15 +100,53 @@ module AOC
       output.puts "Updated: README.md"
     end
 
-    def run_year(year, paths: Paths.default, renderer: UI::Renderer.new)
+    def run_year(year, paths: Paths.default, renderer: UI::Renderer.new, input_store: InputStore.new(paths: paths))
       year = parse_year(year)
       day_paths = paths.day_files(year)
 
       raise UserError, "No days found for #{year}." if day_paths.empty?
 
-      results = day_paths.flat_map { |path| run_all_day(path) }
+      prefetch_inputs(day_paths, paths: paths, input_store: input_store)
+      results = map_concurrently(day_paths) { |path| run_all_day(path) }.flatten
 
       renderer.print_year_results(year, results)
+    end
+
+    # Fetches missing inputs serially so the parallel day runs never race the
+    # download throttle.
+    def prefetch_inputs(day_paths, paths:, input_store:)
+      day_paths.each do |path|
+        year, day = paths.infer_year_day(path)
+        input_store.read(year, day)
+      end
+    end
+
+    # Yields each item on a pool of worker threads and returns the results in
+    # input order. A failure stops dispatching the remaining items and
+    # re-raises on join.
+    def map_concurrently(items, limit: Etc.nprocessors)
+      queue = Thread::Queue.new
+      items.each_with_index { |item, index| queue << [item, index] }
+      queue.close
+
+      results = Array.new(items.length)
+
+      workers = [limit, items.length].min.times.map do
+        Thread.new do
+          Thread.current.report_on_exception = false
+
+          while (entry = queue.pop)
+            item, index = entry
+            results[index] = yield(item)
+          end
+        rescue
+          queue.clear
+          raise
+        end
+      end
+
+      workers.each(&:join)
+      results
     end
 
     # Runs the day's canonical file and variants on real input only and renders

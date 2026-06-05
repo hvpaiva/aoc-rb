@@ -42,13 +42,18 @@ module RunnerTestSupport
     end
   end
 
-  # Stand-in for AOC::InputStore. Returns the canned input string.
+  # Stand-in for AOC::InputStore. Returns the canned input string and records
+  # the `[year, day]` pairs read.
   class FakeInputStore
+    attr_reader :reads
+
     def initialize(value)
       @value = value
+      @reads = []
     end
 
-    def read(_year, _day)
+    def read(year, day)
+      @reads << [year, day]
       @value
     end
   end

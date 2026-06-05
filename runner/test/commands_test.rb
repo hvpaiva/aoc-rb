@@ -365,6 +365,68 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_run_year_prefetches_inputs_before_the_parallel_runs
+    with_project do |root|
+      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      write_file(root.join("2024", "02.rb"), <<~RUBY)
+        # frozen_string_literal: true
+
+        require_relative "../runner/aoc"
+
+        def part1 = input.chomp.length
+      RUBY
+      write_file(root.join("inputs", "2024", "02.txt"), "abc\n")
+      input_store = FakeInputStore.new("abc\n")
+
+      capture_io do
+        AOC::Commands.run_year(2024, paths: paths, input_store: input_store)
+      end
+
+      assert_equal [[2024, 2]], input_store.reads
+    end
+  end
+
+  def test_run_year_keeps_day_order_in_the_report
+    with_project do |root|
+      paths = AOC::Paths.new(root: root, config_dir: root.join("config"))
+      [2, 3].each do |day|
+        write_file(root.join("2024", format("%02d.rb", day)), <<~RUBY)
+          # frozen_string_literal: true
+
+          require_relative "../runner/aoc"
+
+          def part1 = input.chomp
+        RUBY
+        write_file(root.join("inputs", "2024", format("%02d.txt", day)), "day#{day}\n")
+      end
+
+      stdout, = capture_io do
+        AOC::Commands.run_year(2024, paths: paths)
+      end
+
+      assert_operator stdout.index("day 02"), :<, stdout.index("day 03")
+    end
+  end
+
+  def test_map_concurrently_returns_results_in_input_order
+    results = AOC::Commands.map_concurrently([3, 1, 2], limit: 2) { |n| n * 10 }
+
+    assert_equal [30, 10, 20], results
+  end
+
+  def test_map_concurrently_stops_dispatching_after_a_failure
+    seen = []
+
+    assert_raises(RuntimeError) do
+      AOC::Commands.map_concurrently([1, 2, 3], limit: 1) do |n|
+        seen << n
+        raise "boom"
+      end
+    end
+
+    assert_equal [1], seen
+  end
+
   def test_run_year_reports_invalid_year
     error = assert_raises(AOC::UserError) { AOC::Commands.run_year("bad") }
 
