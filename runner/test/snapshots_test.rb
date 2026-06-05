@@ -328,7 +328,7 @@ class SnapshotsTest < Minitest::Test
       🎄 Ruby Advent of Code
 
       2015
-        ★★☆
+        ★ ★ ☆
 
       ★ 2 stars · ☆ 1 missing · 3 total
     OUT

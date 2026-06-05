@@ -276,10 +276,14 @@ module AOC
 
       def overview_star(done)
         filled, empty = star_glyphs
-        return yellow(filled) if done
 
-        star = dim(empty)
-        narrow_stars? ? star : "#{star} "
+        if done
+          star = yellow(filled)
+          @env["AOC_TEXT_STARS"] ? "#{star} " : star
+        else
+          star = dim(empty)
+          @env["AOC_ASCII"] ? star : "#{star} "
+        end
       end
 
       def star_glyphs
@@ -288,16 +292,12 @@ module AOC
         [icon(:star), icon(:empty_star)]
       end
 
-      def narrow_stars?
-        !!(@env["AOC_ASCII"] || @env["AOC_TEXT_STARS"])
-      end
-
       def pad_overview_cell(text)
         text + (" " * [overview_cell_width - visible_width(text), 0].max)
       end
 
       def overview_cell_width
-        narrow_stars? ? OVERVIEW_CELL_WIDTH_NARROW : OVERVIEW_CELL_WIDTH_WIDE
+        @env["AOC_ASCII"] ? OVERVIEW_CELL_WIDTH_NARROW : OVERVIEW_CELL_WIDTH_WIDE
       end
 
       # Approximates terminal column width: strips ANSI escapes and treats the
