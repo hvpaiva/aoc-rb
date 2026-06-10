@@ -10,10 +10,7 @@ end
 
 def part2
   floor = 0
-  input.each_char.with_index(1) do |step, i|
-    floor += STEPS.fetch(step, 0)
-    return i if floor.negative?
-  end
+  input.each_char.find_index { (floor += STEPS.fetch(it, 0)).negative? } + 1
 end
 
 example "(())()()", part1: 0

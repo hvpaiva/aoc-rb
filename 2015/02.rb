@@ -10,8 +10,8 @@ INPUT
 def presents = @presents ||= input.lines(chomp: true).map { |line| line.split("x").map(&:to_i) }
 
 def part1
-  presents.sum do |l, w, h|
-    sides = [l * w, w * h, h * l]
+  presents.sum do |dims|
+    sides = dims.combination(2).map { |a, b| a * b}
     (2 * sides.sum) + sides.min
   end
 end

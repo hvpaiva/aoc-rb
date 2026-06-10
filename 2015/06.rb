@@ -11,7 +11,7 @@ def instructions
     Instruction.new(
       action: m[:action].tr(" ", "_").to_sym,
       from_x: m[:x1].to_i, from_y: m[:y1].to_i,
-      to_x: m[:x2].to_i, to_y:   m[:y2].to_i
+      to_x: m[:x2].to_i, to_y: m[:y2].to_i
     )
   end
 end
